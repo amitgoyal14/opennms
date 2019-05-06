@@ -3,8 +3,8 @@
 # shellcheck disable=SC2034
 
 # Base Image Dependency
-BASE_IMAGE="opennms/openjdk"
-BASE_IMAGE_VERSION="1.8.0.191.b12-b3"
+BASE_IMAGE="opennms/base-sentinel"
+BASE_IMAGE_VERSION="jdk11-1.0.1-cb.1239"
 BUILD_DATE="$(date -u +"%Y-%m-%dT%H:%M:%S%z")"
 
 # Sentinel Image versioning
