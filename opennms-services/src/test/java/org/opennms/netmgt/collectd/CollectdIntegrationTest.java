@@ -131,9 +131,6 @@ public class CollectdIntegrationTest {
         File homeDir = resource.getFile().getParentFile().getParentFile();
         System.setProperty("opennms.home", homeDir.getAbsolutePath());
 
-        resource = new ClassPathResource("/test-thresholds.xml");
-        ThresholdingConfigFactory.setInstance(new ThresholdingConfigFactory(resource.getInputStream()));
-
         // set up test using a string key
         m_key = m_testName.getMethodName()+System.nanoTime();
         m_tests.put(m_key, this);

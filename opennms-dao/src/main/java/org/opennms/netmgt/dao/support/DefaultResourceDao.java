@@ -32,6 +32,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.CharEncoding;
 import org.opennms.core.utils.InetAddressUtils;
+import org.opennms.netmgt.collectd.NodeResourceType;
 import org.opennms.netmgt.config.api.CollectdConfigFactory;
 import org.opennms.netmgt.config.api.ResourceTypesDao;
 import org.opennms.netmgt.config.collectd.Package;
