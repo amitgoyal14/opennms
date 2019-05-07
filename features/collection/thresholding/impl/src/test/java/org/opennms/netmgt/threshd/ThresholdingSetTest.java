@@ -32,6 +32,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -67,7 +69,8 @@ public class ThresholdingSetTest {
 
     @Test
     public void testBadThresholdingConfigReinitialize() throws Exception {
-        final String opennmsHome = getClass().getResource("testBadThresholdingConfigReinitialize").getFile();
+        final URL resourceUri = getClass().getResource("testBadThresholdingConfigReinitialize");
+        String opennmsHome = new File(resourceUri.getPath()).toPath().toString();
         final Path goodXml = Paths.get(opennmsHome, "etc", "good-thresholds.xml");
         final Path badXml = Paths.get(opennmsHome, "etc", "bad-thresholds.xml");
         final Path targetXml = Paths.get(opennmsHome,  "etc", "thresholds.xml");
