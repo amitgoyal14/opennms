@@ -26,17 +26,10 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.poller;
+package org.opennms.netmgt.collection.api;
 
 import java.util.Map;
 
-import org.opennms.netmgt.collection.api.AttributeGroup;
-import org.opennms.netmgt.collection.api.AttributeGroupType;
-import org.opennms.netmgt.collection.api.CollectionAttribute;
-import org.opennms.netmgt.collection.api.CollectionResource;
-import org.opennms.netmgt.collection.api.CollectionSetVisitor;
-import org.opennms.netmgt.collection.api.ServiceParameters;
-import org.opennms.netmgt.collection.api.TimeKeeper;
 import org.opennms.netmgt.dao.api.MonitoringLocationUtils;
 import org.opennms.netmgt.model.ResourcePath;
 

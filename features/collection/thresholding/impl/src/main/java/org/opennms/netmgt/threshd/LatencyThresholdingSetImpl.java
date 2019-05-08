@@ -38,6 +38,9 @@ import java.util.Map.Entry;
 import org.opennms.netmgt.collection.api.CollectionAttribute;
 import org.opennms.netmgt.collection.api.CollectionAttributeType;
 import org.opennms.netmgt.collection.api.CollectionResource;
+import org.opennms.netmgt.collection.api.LatencyCollectionAttribute;
+import org.opennms.netmgt.collection.api.LatencyCollectionAttributeType;
+import org.opennms.netmgt.collection.api.LatencyCollectionResource;
 import org.opennms.netmgt.dao.api.ResourceStorageDao;
 import org.opennms.netmgt.rrd.RrdRepository;
 import org.opennms.netmgt.xml.event.Event;
@@ -96,15 +99,13 @@ public class LatencyThresholdingSetImpl extends ThresholdingSetImpl implements L
      */
     /** {@inheritDoc} */
     public List<Event> applyThresholds(String svcName, Map<String, Double> attributes) {
-        CollectionResource latencyResource = null; // TODO - pass these in
-        Map<String, CollectionAttribute> attributesMap = null; // TODO - pass in this map
-        /*CollectionResource latencyResource = new CollectionResource(svcName, m_hostAddress, m_location);
-        CollectionAttributeType latencyType = new CollectionAttributeType();
+        LatencyCollectionResource latencyResource = new LatencyCollectionResource(svcName, m_hostAddress, m_location);
+        LatencyCollectionAttributeType latencyType = new LatencyCollectionAttributeType();
         Map<String, CollectionAttribute> attributesMap = new HashMap<String, CollectionAttribute>();
         for (final Entry<String, Double> entry : attributes.entrySet()) {
             final String ds = entry.getKey();
             attributesMap.put(ds, new LatencyCollectionAttribute(latencyResource, latencyType, ds, entry.getValue()));
-        }*/
+        }
         //The timestamp is irrelevant; latency is never a COUNTER (which is the only reason the date is used).  
         //Yes, we have to know a little too much about the implementation details of CollectionResourceWrapper to say that, but
         // we have little choice

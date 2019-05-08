@@ -26,14 +26,8 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.netmgt.poller;
+package org.opennms.netmgt.collection.api;
 
-import org.opennms.netmgt.collection.api.AttributeType;
-import org.opennms.netmgt.collection.api.CollectionAttribute;
-import org.opennms.netmgt.collection.api.CollectionResource;
-import org.opennms.netmgt.collection.api.CollectionSetVisitor;
-import org.opennms.netmgt.collection.api.Persister;
-import org.opennms.netmgt.collection.api.ServiceParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,8 +49,8 @@ public class LatencyCollectionAttribute implements CollectionAttribute {
     /**
      * <p>Constructor for LatencyCollectionAttribute.</p>
      *
-     * @param resource a {@link org.opennms.netmgt.poller.LatencyCollectionResource} object.
-     * @param type a {@link org.opennms.netmgt.poller.LatencyCollectionAttributeType} object.
+     * @param resource a {@link org.opennms.netmgt.collection.api.LatencyCollectionResource} object.
+     * @param type a {@link org.opennms.netmgt.collection.api.LatencyCollectionAttributeType} object.
      * @param name a {@link java.lang.String} object.
      * @param value a {@link java.lang.Double} object.
      */
@@ -71,7 +65,7 @@ public class LatencyCollectionAttribute implements CollectionAttribute {
     /**
      * <p>getAttributeType</p>
      *
-     * @return a {@link org.opennms.netmgt.poller.LatencyCollectionAttributeType} object.
+     * @return a {@link org.opennms.netmgt.collection.api.LatencyCollectionAttributeType} object.
      */
     @Override
     public LatencyCollectionAttributeType getAttributeType() {
