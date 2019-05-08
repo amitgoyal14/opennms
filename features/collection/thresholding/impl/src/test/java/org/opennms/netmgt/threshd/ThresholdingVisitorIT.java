@@ -78,7 +78,6 @@ import org.opennms.netmgt.collectd.SnmpCollectionResource;
 import org.opennms.netmgt.collectd.SnmpIfData;
 import org.opennms.netmgt.collection.api.AttributeGroupType;
 import org.opennms.netmgt.collection.api.AttributeType;
-import org.opennms.netmgt.collection.api.CollectionResource;
 import org.opennms.netmgt.collection.api.CollectionSet;
 import org.opennms.netmgt.collection.api.ServiceParameters;
 import org.opennms.netmgt.collection.support.IndexStorageStrategy;

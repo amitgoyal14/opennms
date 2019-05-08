@@ -36,10 +36,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.opennms.netmgt.collectd.AliasedResource;
+import org.opennms.netmgt.collectd.IfInfo;
 import org.opennms.netmgt.collection.api.AttributeType;
 import org.opennms.netmgt.collection.api.CollectionAttribute;
 import org.opennms.netmgt.collection.api.CollectionResource;
+import org.opennms.netmgt.collection.api.LatencyCollectionResource;
 import org.opennms.netmgt.dao.api.ResourceStorageDao;
+import org.opennms.netmgt.dao.hibernate.IfLabelDaoImpl;
 import org.opennms.netmgt.model.ResourceId;
 import org.opennms.netmgt.model.ResourcePath;
 import org.opennms.netmgt.model.ResourceTypeUtils;
@@ -157,7 +161,7 @@ public class CollectionResourceWrapper {
         m_attributes = attributes;
         m_resourceStorageDao = resourceStorageDao;
 
-        /*if (isAnInterfaceResource()) {
+        if (isAnInterfaceResource()) {
             if (resource instanceof AliasedResource) { // TODO What about AliasedResource's custom attributes?
                 m_iflabel = ((AliasedResource) resource).getInterfaceLabel();
                 m_ifInfo.putAll(((AliasedResource) resource).getIfInfo().getAttributesMap());
@@ -179,10 +183,10 @@ public class CollectionResourceWrapper {
             }
         
             m_ifindex = m_ifInfo.get("snmpifindex");
-        } else {*/
-        m_ifindex = null;
-        m_iflabel = null;
-        // }
+        } else {
+            m_ifindex = null;
+            m_iflabel = null;
+        }
     }
 
     public void setCounterReset(boolean counterReset) {
