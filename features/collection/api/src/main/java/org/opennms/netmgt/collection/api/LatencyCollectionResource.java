@@ -30,7 +30,6 @@ package org.opennms.netmgt.collection.api;
 
 import java.util.Map;
 
-import org.opennms.netmgt.dao.api.MonitoringLocationUtils;
 import org.opennms.netmgt.model.ResourcePath;
 
 import com.google.common.collect.Maps;
@@ -172,7 +171,7 @@ public class LatencyCollectionResource implements CollectionResource {
 
     @Override
     public ResourcePath getPath() {
-        if (MonitoringLocationUtils.isDefaultLocationName(m_location)) {
+        if (m_location == null || "Default".equals(m_location)) {
             return ResourcePath.get(m_ipAddress);
         } else {
             return ResourcePath.get(ResourcePath.sanitize(m_location), m_ipAddress);
