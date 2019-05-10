@@ -42,14 +42,15 @@ import org.opennms.netmgt.collection.api.AttributeType;
 import org.opennms.netmgt.collection.api.CollectionAttribute;
 import org.opennms.netmgt.collection.api.CollectionResource;
 import org.opennms.netmgt.collection.api.LatencyCollectionResource;
+import org.opennms.netmgt.dao.api.IfLabel;
 import org.opennms.netmgt.dao.api.ResourceStorageDao;
-import org.opennms.netmgt.dao.hibernate.IfLabelDaoImpl;
 import org.opennms.netmgt.model.ResourceId;
 import org.opennms.netmgt.model.ResourcePath;
 import org.opennms.netmgt.model.ResourceTypeUtils;
 import org.opennms.netmgt.rrd.RrdRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * <p>CollectionResourceWrapper class.</p>
@@ -133,6 +134,9 @@ public class CollectionResourceWrapper {
      */
     private boolean m_counterReset = false;
 
+    @Autowired
+    private IfLabel ifLabel;
+
     /**
      * <p>Constructor for CollectionResourceWrapper.</p>
      *
@@ -171,9 +175,9 @@ public class CollectionResourceWrapper {
                 m_ifInfo.putAll(((IfInfo) resource).getAttributesMap());
             } else if (resource instanceof LatencyCollectionResource) {
                 String ipAddress = ((LatencyCollectionResource) resource).getIpAddress();
-                m_iflabel = IfLabelDaoImpl.getInstance().getIfLabel(getNodeId(), addr(ipAddress));
+                m_iflabel = ifLabel.getIfLabel(getNodeId(), addr(ipAddress));
                 if (m_iflabel != null) { // See Bug 3488
-                    m_ifInfo.putAll(IfLabelDaoImpl.getInstance().getInterfaceInfoFromIfLabel(getNodeId(), m_iflabel));
+                    m_ifInfo.putAll(ifLabel.getInterfaceInfoFromIfLabel(getNodeId(), m_iflabel));
                 } else {
                     LOG.info("Can't find ifLabel for latency resource {} on node {}", resource.getInstance(), getNodeId());
                 }
