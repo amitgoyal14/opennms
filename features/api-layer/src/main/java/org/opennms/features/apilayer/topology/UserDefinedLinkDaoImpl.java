@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 import org.opennms.integration.api.v1.topology.UserDefinedLink;
 import org.opennms.integration.api.v1.topology.UserDefinedLinkDao;
-import org.opennms.integration.api.v1.topology.beans.UserDefinedLinkBean;
+import org.opennms.integration.api.v1.topology.immutables.ImmutableUserDefinedLink;
 import org.opennms.netmgt.dao.api.SessionUtils;
 import org.opennms.netmgt.enlinkd.service.api.UserDefinedLinkTopologyService;
 
@@ -63,34 +63,29 @@ public class UserDefinedLinkDaoImpl implements UserDefinedLinkDao {
 
     @Override
     public List<UserDefinedLink> getLinks() {
-        ensureServicesAreAvailable();
         return sessionUtils.withReadOnlyTransaction(() ->
                 userDefinedLinkDao.findAll().stream().map(UserDefinedLinkDaoImpl::toApiLink).collect(Collectors.toList()));
     }
 
     @Override
     public List<UserDefinedLink> getOutLinks(int nodeIdA) {
-        ensureServicesAreAvailable();
         return sessionUtils.withReadOnlyTransaction(() ->
                 userDefinedLinkDao.getOutLinks(nodeIdA).stream().map(UserDefinedLinkDaoImpl::toApiLink).collect(Collectors.toList()));
     }
 
     @Override
     public List<UserDefinedLink> getInLinks(int nodeIdZ) {
-        ensureServicesAreAvailable();
         return sessionUtils.withReadOnlyTransaction(() ->
                 userDefinedLinkDao.getInLinks(nodeIdZ).stream().map(UserDefinedLinkDaoImpl::toApiLink).collect(Collectors.toList()));}
 
     @Override
     public List<UserDefinedLink> getLinksWithLabel(String label) {
-        ensureServicesAreAvailable();
         return sessionUtils.withReadOnlyTransaction(() ->
                 userDefinedLinkDao.getLinksWithLabel(label).stream().map(UserDefinedLinkDaoImpl::toApiLink).collect(Collectors.toList()));
     }
 
     @Override
     public UserDefinedLink saveOrUpdate(UserDefinedLink link) {
-        ensureServicesAreAvailable();
         return sessionUtils.withTransaction(() -> {
             final org.opennms.netmgt.enlinkd.model.UserDefinedLink modelLink = toModelLink(link);
             userDefinedLinkTopologyService.saveOrUpdate(modelLink);
@@ -100,7 +95,6 @@ public class UserDefinedLinkDaoImpl implements UserDefinedLinkDao {
 
     @Override
     public void delete(UserDefinedLink link) {
-        ensureServicesAreAvailable();
         sessionUtils.withTransaction(() -> {
             userDefinedLinkTopologyService.delete(link.getDbId());
             return null;
@@ -109,7 +103,6 @@ public class UserDefinedLinkDaoImpl implements UserDefinedLinkDao {
 
     @Override
     public void delete(Collection<UserDefinedLink> links) {
-        ensureServicesAreAvailable();
         sessionUtils.withTransaction(() -> {
             for (UserDefinedLink link : links) {
                 userDefinedLinkTopologyService.delete(link.getDbId());
@@ -118,22 +111,16 @@ public class UserDefinedLinkDaoImpl implements UserDefinedLinkDao {
         });
     }
 
-    private void ensureServicesAreAvailable() {
-        if (userDefinedLinkDao == null) {
-            throw new IllegalStateException("Required DAO is not available. Ensure the Enlinkd service is enabled.");
-        }
-    }
-
     protected static UserDefinedLink toApiLink(org.opennms.netmgt.enlinkd.model.UserDefinedLink modelLink) {
-        return UserDefinedLinkBean.builder()
-                .dbId(modelLink.getDbId())
-                .owner(modelLink.getOwner())
-                .linkId(modelLink.getLinkId())
-                .linkLabel(modelLink.getLinkLabel())
-                .nodeIdA(modelLink.getNodeIdA())
-                .nodeIdZ(modelLink.getNodeIdZ())
-                .componentLabelA(modelLink.getComponentLabelA())
-                .componentLabelZ(modelLink.getComponentLabelZ())
+        return ImmutableUserDefinedLink.newBuilder()
+                .setDbId(modelLink.getDbId())
+                .setOwner(modelLink.getOwner())
+                .setLinkId(modelLink.getLinkId())
+                .setLinkLabel(modelLink.getLinkLabel())
+                .setNodeIdA(modelLink.getNodeIdA())
+                .setNodeIdZ(modelLink.getNodeIdZ())
+                .setComponentLabelA(modelLink.getComponentLabelA())
+                .setComponentLabelZ(modelLink.getComponentLabelZ())
                 .build();
     }
 

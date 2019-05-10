@@ -195,13 +195,6 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.opennms.features.geolocation</groupId>
-      <artifactId>geolocation</artifactId>
-      <version>${project.version}</version>
-      <type>pom</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.opennms.features.topology.plugins</groupId>
       <artifactId>org.opennms.features.topology.plugins.browsers</artifactId>
       <version>${project.version}</version>
@@ -375,13 +368,6 @@
     <dependency>
       <groupId>org.opennms</groupId>
       <artifactId>opennms-wmi</artifactId>
-      <version>${project.version}</version>
-      <type>pom</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.opennms.plugins</groupId>
-      <artifactId>alarm-change-notifier</artifactId>
       <version>${project.version}</version>
       <type>pom</type>
       <scope>provided</scope>

@@ -279,6 +279,7 @@
         <feature>opentracing-api</feature>
         <bundle>mvn:org.opennms.core.tracing/org.opennms.core.tracing.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.core.tracing/org.opennms.core.tracing.registry/${project.version}</bundle>
+        <bundle>mvn:org.opennms.core/org.opennms.core.xml/${project.version}</bundle>
     </feature>
     <feature name="opennms-core-tracing-jaeger" version="${project.version}" description="OpenNMS :: Core :: Tracing :: Jeager Tracer">
         <feature>opennms-core-tracing</feature>
@@ -427,15 +428,16 @@
         <bundle>mvn:org.opennms/opennms-config/${project.version}</bundle>
     </feature>
     <feature name="opennms-kafka" version="${project.version}" description="OpenNMS :: Features :: Kafka">
-        <bundle dependency="true">mvn:org.scala-lang/scala-library/2.12.8</bundle>
+        <bundle dependency="true">mvn:org.scala-lang/scala-library/${scalaLibraryVersion}</bundle>
         <bundle dependency="true">mvn:org.apache.zookeeper/zookeeper/3.4.10</bundle>
-        <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/2.9.1</bundle>
-        <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/2.9.0</bundle>
-        <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/2.9.1</bundle>
+        <bundle dependency="true">mvn:com.typesafe.scala-logging/scala-logging_${scalaVersion}/${scalaLoggingVersion}</bundle>
+        <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/${jackson2Version}</bundle>
+        <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson2Version}</bundle>
+        <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/${jackson2Version}</bundle>
         <bundle dependency="true">wrap:mvn:com.yammer.metrics/metrics-core/2.2.0$Bundle-Version=2.2.0&amp;Export-Package=*;-noimport:=true;version="2.2.0"</bundle>
         <bundle dependency="true">wrap:mvn:com.yammer.metrics/metrics-annotation/2.2.0$Bundle-Version=2.2.0&amp;Export-Package=*;-noimport:=true;version="2.2.0"</bundle>
-        <bundle dependency="true">mvn:org.apache.kafka/kafka_2.12/${kafkaStreamsVersion}</bundle>
-	<bundle dependency="true">mvn:org.apache.kafka/kafka-clients/${kafkaStreamsVersion}</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.kafka_${scalaVersion}/${kafkaBundleVersion}</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.kafka-clients/${kafkaBundleVersion}</bundle>
     </feature>
     <feature name="opennms-aws-sqs" version="${project.version}" description="OpenNMS :: Features :: AWS SQS">
         <bundle dependency="true">wrap:mvn:com.amazonaws/aws-java-sdk-core/${awsSdkVersion}</bundle>
@@ -452,6 +454,7 @@
         <feature>org.json</feature>
         <feature>rate-limited-logger</feature>
         <feature>opennms-core</feature>
+        <bundle>mvn:com.google.protobuf/protobuf-java/${protobufVersion}</bundle>
         <bundle>mvn:org.opennms.core.ipc.sink/org.opennms.core.ipc.sink.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.core.ipc.sink/org.opennms.core.ipc.sink.common/${project.version}</bundle>
         <bundle>mvn:org.opennms.core.ipc.sink/org.opennms.core.ipc.sink.xml/${project.version}</bundle>
@@ -510,6 +513,7 @@
         <feature>opennms-core-camel</feature>
         <feature>opennms-distributed-core-api</feature>
         <feature>opennms-dao-api</feature>
+        <feature>opennms-core-tracing</feature>
         <bundle>mvn:org.opennms.core.ipc.rpc/org.opennms.core.ipc.rpc.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.core.ipc.rpc/org.opennms.core.ipc.rpc.utils/${project.version}</bundle>
         <bundle>mvn:org.opennms.core.ipc.rpc/org.opennms.core.ipc.rpc.xml/${project.version}</bundle>
@@ -530,7 +534,6 @@
     <feature name="opennms-core-ipc-rpc-kafka" version="${project.version}" description="OpenNMS :: Core :: IPC :: RPC :: Kafka Impl.">
         <feature>opennms-kafka</feature>
         <feature>opennms-core-ipc-rpc-api</feature>
-        <feature>opennms-core-tracing</feature>
         <bundle>mvn:org.opennms.core.health/org.opennms.core.health.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.core.ipc.common/org.opennms.core.ipc.common.kafka/${project.version}</bundle>
         <bundle>mvn:org.opennms.core.ipc.rpc/org.opennms.core.ipc.rpc.kafka/${project.version}</bundle>
@@ -883,23 +886,27 @@
         <bundle>mvn:org.opennms.features.alarms.history/org.opennms.features.alarms.history.elastic/${project.version}</bundle>
     </feature>
 
-    <feature name="kafka-streams" description="Kafka Streams" version="${kafkaStreamsVersion}">
+    <feature name="kafka-streams" description="Kafka Streams" version="${kafkaVersion}">
         <!-- Wrap the kafka-streams bundle instead of using the servicemix implementation since the later doesn't include the required imports for rocksdb -->
-        <bundle dependency="true">wrap:mvn:org.apache.kafka/kafka-streams/${kafkaStreamsVersion}$Bundle-Version=${kafkaStreamsVersion}&amp;Export-Package=*;-noimport:=true:version="${kafkaStreamsVersion}"</bundle>
-        <bundle dependency="true">mvn:org.apache.kafka/kafka-clients/${kafkaStreamsVersion}</bundle>
-        <bundle dependency="true">wrap:mvn:org.apache.kafka/connect-json/${kafkaStreamsVersion}</bundle>
-        <bundle dependency="true">wrap:mvn:org.apache.kafka/connect-api/${kafkaStreamsVersion}</bundle>
+        <bundle dependency="true">wrap:mvn:org.apache.kafka/kafka-streams/${kafkaVersion}$Bundle-Version=${kafkaVersion}&amp;Export-Package=*;-noimport:=true:version="${kafkaVersion}"</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.kafka-clients/${kafkaBundleVersion}</bundle>
+        <bundle dependency="true">wrap:mvn:org.apache.kafka/connect-json/${kafkaVersion}</bundle>
+        <bundle dependency="true">wrap:mvn:org.apache.kafka/connect-api/${kafkaVersion}</bundle>
         <bundle dependency="true">mvn:org.lz4/lz4-java/1.4</bundle>
         <bundle dependency="true">mvn:org.xerial.snappy/snappy-java/1.1.4</bundle>
+        <bundle dependency="true">mvn:com.typesafe.scala-logging/scala-logging_${scalaVersion}/${scalaLoggingVersion}</bundle>
         <!-- These are only needed for  servicemix implementation of kafka streams -->
-        <!--       <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/2.9.1</bundle>
-              <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/2.9.0</bundle>
-              <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/2.9.1</bundle> -->
-        <bundle dependency="true">wrap:mvn:org.rocksdb/rocksdbjni/5.7.3</bundle>
+        <!--
+        <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/${jackson2Version}</bundle>
+        <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson2Version}</bundle>
+        <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/${jackson2Version}</bundle>
+        -->
+        <bundle dependency="true">wrap:mvn:org.rocksdb/rocksdbjni/${rocksdbjniVersion}</bundle>
     </feature>
+
     <feature name="opennms-kafka-producer" version="${project.version}" description="OpenNMS :: Kafka :: Producer">
         <feature version="${guavaVersion}">guava</feature>
-        <feature version="${kafkaStreamsVersion}">kafka-streams</feature>
+        <feature version="${kafkaVersion}">kafka-streams</feature>
         <feature>opennms-collection-api</feature>
         <feature>opennms-situation-feedback-api</feature>
         <bundle>mvn:com.google.protobuf/protobuf-java/${protobuf3Version}</bundle>
@@ -1096,12 +1103,15 @@
     <feature name="geolocation" version="${project.version}" description="OpenNMS :: Features :: Geolocation :: Feature">
         <details>OpenNMS is the world's first enterprise grade network management platform developed under the open source model. It consists of a community supported open-source project as well as a commercial services, training and support organization.</details>
         <feature>opennms-core-web</feature>
-        <bundle>mvn:org.opennms.features.geolocation/org.opennms.features.geolocation.api/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.geolocation/org.opennms.features.geolocation.services/${project.version}</bundle>
         <bundle>mvn:com.google.guava/guava/${guavaVersion}</bundle>
-        <bundle>mvn:org.opennms.features.geocoder/org.opennms.features.geocoder.api/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.geocoder/org.opennms.features.geocoder.google/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.geocoder/org.opennms.features.geocoder.nominatim/${project.version}</bundle>
+        <bundle start-level="80">mvn:org.opennms.features.geocoder/org.opennms.features.geocoder.api/${project.version}</bundle>
+        <bundle start-level="80">mvn:org.opennms.features.geocoder/org.opennms.features.geocoder.rest/${project.version}</bundle>
+        <bundle start-level="80">mvn:org.opennms.features.geocoder/org.opennms.features.geocoder.service/${project.version}</bundle>
+        <bundle start-level="90">mvn:org.opennms.features.geolocation/org.opennms.features.geolocation.api/${project.version}</bundle>
+        <bundle start-level="90">mvn:org.opennms.features.geolocation/org.opennms.features.geolocation.services/${project.version}</bundle>
+        <bundle start-level="100">mvn:org.opennms.features.geocoder/org.opennms.features.geocoder.google/${project.version}</bundle>
+        <bundle start-level="100">mvn:org.opennms.features.geocoder/org.opennms.features.geocoder.mapquest/${project.version}</bundle>
+        <bundle start-level="100">mvn:org.opennms.features.geocoder/org.opennms.features.geocoder.nominatim/${project.version}</bundle>
     </feature>
     <feature name="vaadin-snmp-events-and-metrics" version="${project.version}" description="OpenNMS :: Features :: SNMP Events and Metrics Admin UI">
         <details>OpenNMS Vaadin Administration UI for handling SNMP related configuration files for events and data collection.</details>
@@ -1120,16 +1130,9 @@
         <feature>vaadin</feature>
         <feature>geolocation</feature>
         <bundle>mvn:org.opennms.features/vaadin-node-maps/${project.version}</bundle>
-        <bundle>mvn:org.apache.httpcomponents/httpcore-osgi/${httpcoreVersion}</bundle>
-        <bundle>mvn:org.apache.httpcomponents/httpclient-osgi/${httpclientVersion}</bundle>
-        <bundle>mvn:org.opennms.core/org.opennms.core.web/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.geocoder/org.opennms.features.geocoder.google/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.geocoder/org.opennms.features.geocoder.nominatim/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.geolocation/org.opennms.features.geolocation.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.vaadin-components/core/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.topology/org.opennms.features.topology.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.topology.plugins/org.opennms.features.topology.plugins.browsers/${project.version}</bundle>
-        <bundle>mvn:org.opennms.features.geolocation/org.opennms.features.geolocation.api/${project.version}</bundle>
     </feature>
     <feature name="osgi-nrtg-api" version="${project.version}" description="OpenNMS :: Features :: NRTG :: Features :: API">
         <details>The API contains the models for the NRTG OSGI projects. It has models for collection jobs, measurements and protocol collectors.</details>
@@ -1361,19 +1364,6 @@
         <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/${jacksonVersion}</bundle>
         <bundle>mvn:org.opennms/opennms-web-api/${project.version}</bundle>
         <bundle>mvn:org.freemarker/freemarker/${freemarkerVersion}</bundle>
-    </feature>
-    <feature name="alarm-change-notifier" version="${project.version}" description="alarm-change-notifier">
-        <details>Feature definition for alarm-change-notifier</details>
-        <bundle>mvn:com.impossibl.pgjdbc-ng/pgjdbc-ng/0.7.1</bundle>
-        <bundle>mvn:io.netty/netty-common/${netty4Version}</bundle>
-        <bundle>mvn:io.netty/netty-transport/${netty4Version}</bundle>
-        <bundle>mvn:io.netty/netty-buffer/${netty4Version}</bundle>
-        <bundle>mvn:io.netty/netty-handler/${netty4Version}</bundle>
-        <bundle>mvn:io.netty/netty-resolver/${netty4Version}</bundle>
-        <bundle>mvn:io.netty/netty-codec/${netty4Version}</bundle>
-        <bundle>mvn:org.opennms.plugins/alarm-change-notifier.pg-jdbc-utils/${project.version}</bundle>
-        <bundle>mvn:org.opennms.plugins/alarm-change-notifier.main-module/${project.version}</bundle>
-        <bundle>mvn:com.googlecode.json-simple/json-simple/1.1.1</bundle>
     </feature>
     <feature name="opennms-es-rest" version="${project.version}" description="OpenNMS :: Features :: ElasticSearch Rest">
         <details>OpenNMS :: Features :: ElasticSearch Rest</details>
