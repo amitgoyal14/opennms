@@ -33,12 +33,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.opennms.netmgt.dao.api.IfLabel;
 import org.opennms.netmgt.dao.api.ResourceStorageDao;
 import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.rrd.RrdRepository;
 import org.opennms.netmgt.xml.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * TEMP CLASS TO become seam to Thresholding Service
@@ -53,6 +55,9 @@ public class PollerThresholds {
 
     private static ResourceStorageDao m_resourceStorageDao; // TODO where should this best come from?
 
+    @Autowired
+    private IfLabel m_ifLabelDao;
+
     public void applyThresholds(String rrdPath, MonitoredService service, String dsName, Map<String, Number> entries) {
         try {
             if (m_thresholdingSet == null) {
@@ -63,7 +68,8 @@ public class PollerThresholds {
                                                                service.getSvcName(), 
                                                                service.getNodeLocation(), 
                                                                repository,
-                                                               m_resourceStorageDao);
+                                                               m_resourceStorageDao, 
+                                                               m_ifLabelDao);
             }
             LinkedHashMap<String, Double> attributes = new LinkedHashMap<String, Double>();
             for (String ds : entries.keySet()) {

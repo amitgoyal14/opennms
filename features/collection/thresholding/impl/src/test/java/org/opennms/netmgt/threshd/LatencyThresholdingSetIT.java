@@ -100,6 +100,7 @@ import org.springframework.test.context.ContextConfiguration;
         "classpath:/META-INF/opennms/applicationContext-minimal-conf.xml",
         "classpath:/META-INF/opennms/applicationContext-dao.xml",
         "classpath:/META-INF/opennms/applicationContext-daemon.xml",
+        "classpath:/META-INF/opennms/applicationContext-thresholding.xml",
         "classpath:/META-INF/opennms/mockEventIpcManager.xml"
 })
 @JUnitConfigurationEnvironment
@@ -120,6 +121,9 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
 
     @Autowired
     private ApplicationContext m_context;
+
+    @Autowired
+    private IfLabel m_ifLabelDao;
 
     private FilesystemResourceStorageDao m_resourceStorageDao;
 
@@ -265,7 +269,7 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
     public void testBug3488() throws Exception {
         String ipAddress = "127.0.0.1";
         setupSnmpInterfaceDatabase(m_db, ipAddress, null);
-        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, ipAddress, "HTTP", null, getRepository(), m_resourceStorageDao);
+        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, ipAddress, "HTTP", null, getRepository(), m_resourceStorageDao, m_ifLabelDao);
         assertTrue(thresholdingSet.hasThresholds()); // Global Test
         Map<String, Double> attributes = new HashMap<String, Double>();
         attributes.put("http", 200.0);
@@ -295,7 +299,7 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
         String ipAddress = "127.0.0.1";
         String ifName = "eth0";
         setupSnmpInterfaceDatabase(m_db, ipAddress, ifName);
-        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, ipAddress, "StrafePing", null, getRepository(), m_resourceStorageDao);
+        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, ipAddress, "StrafePing", null, getRepository(), m_resourceStorageDao, m_ifLabelDao);
         assertTrue(thresholdingSet.hasThresholds());
         Map<String, Double> attributes = new HashMap<String, Double>();
         for (double i=1; i<21; i++) {
@@ -327,7 +331,7 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
         String ifName = "lo0";
         setupSnmpInterfaceDatabase(m_db, "127.0.0.1", ifName);
 
-        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, "127.0.0.1", "HTTP", null, getRepository(), m_resourceStorageDao);
+        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, "127.0.0.1", "HTTP", null, getRepository(), m_resourceStorageDao, m_ifLabelDao);
         assertTrue(thresholdingSet.hasThresholds()); // Global Test
         Map<String, Double> attributes = new HashMap<String, Double>();
         attributes.put("http", 90.0);
@@ -381,7 +385,7 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
         String ifName = "lo0";
         setupSnmpInterfaceDatabase(m_db, "127.0.0.1", ifName);
 
-        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, "127.0.0.1", "HTTP", null, getRepository(), m_resourceStorageDao);
+        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, "127.0.0.1", "HTTP", null, getRepository(), m_resourceStorageDao, m_ifLabelDao);
         assertTrue(thresholdingSet.hasThresholds()); // Global Test
         Map<String, Double> attributes = new HashMap<String, Double>();
         attributes.put("http", 90.0);

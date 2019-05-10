@@ -131,7 +131,7 @@ public class CollectionResourceWrapperIT {
     @Test(expected=IllegalArgumentException.class)
     public void testBadConstructorCall() throws Throwable {
         try {
-            new CollectionResourceWrapper(null, 1, "127.0.0.1", "HTTP", null, null, null, null);
+            new CollectionResourceWrapper(null, 1, "127.0.0.1", "HTTP", null, null, null, null, null);
         } catch (Throwable e) {
             //e.printStackTrace();
             throw e;
@@ -141,7 +141,7 @@ public class CollectionResourceWrapperIT {
     @Test(expected=IllegalArgumentException.class)
     public void testBadderConstructorCall() throws Throwable {
         try {
-            new CollectionResourceWrapper(null, -1, null, null, null, null, null, null);
+            new CollectionResourceWrapper(null, -1, null, null, null, null, null, null, null);
         } catch (Throwable e) {
             e.printStackTrace();
             throw e;

@@ -10,11 +10,8 @@
 		http://aries.apache.org/schemas/blueprint-ext/blueprint-ext-1.5.xsd
 ">
 
-    <bean id="serviceCollectorRegistry" class="org.opennms.netmgt.collection.support.DefaultServiceCollectorRegistry" />
-    <service interface="org.opennms.netmgt.collection.api.ServiceCollectorRegistry" ref="serviceCollectorRegistry" />
-
-    <reference-list interface="org.opennms.netmgt.collection.api.ServiceCollector" availability="optional">
-        <reference-listener bind-method="onBind" unbind-method="onUnbind" ref="serviceCollectorRegistry" />
-    </reference-list>
+    <bean id="thresholdingFactory" class="org.opennms.netmgt.threshd.ThresholdingFactoryImpl" />
+    <service interface="org.opennms.netmgt.threshd.ThresholdingFactory" ref="thresholdingFactory" />
 
 </blueprint>
+

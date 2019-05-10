@@ -135,7 +135,7 @@ public class CollectionResourceWrapper {
     private boolean m_counterReset = false;
 
     @Autowired
-    private IfLabel ifLabel;
+    private IfLabel m_ifLabelDao;
 
     /**
      * <p>Constructor for CollectionResourceWrapper.</p>
@@ -150,7 +150,7 @@ public class CollectionResourceWrapper {
      */
     public CollectionResourceWrapper(Date collectionTimestamp, int nodeId, String hostAddress, String serviceName,
             RrdRepository repository, CollectionResource resource, Map<String, CollectionAttribute> attributes,
-            ResourceStorageDao resourceStorageDao) {
+            ResourceStorageDao resourceStorageDao, IfLabel ifLabelDao) {
 
         if (collectionTimestamp == null) {
             throw new IllegalArgumentException(String.format("%s: Null collection timestamp when thresholding service %s on node %d (%s)", this.getClass().getSimpleName(), serviceName, nodeId, hostAddress));
@@ -164,6 +164,7 @@ public class CollectionResourceWrapper {
         m_resource = resource;
         m_attributes = attributes;
         m_resourceStorageDao = resourceStorageDao;
+        m_ifLabelDao = ifLabelDao;
 
         if (isAnInterfaceResource()) {
             if (resource instanceof AliasedResource) { // TODO What about AliasedResource's custom attributes?
@@ -175,9 +176,9 @@ public class CollectionResourceWrapper {
                 m_ifInfo.putAll(((IfInfo) resource).getAttributesMap());
             } else if (resource instanceof LatencyCollectionResource) {
                 String ipAddress = ((LatencyCollectionResource) resource).getIpAddress();
-                m_iflabel = ifLabel.getIfLabel(getNodeId(), addr(ipAddress));
+                m_iflabel = m_ifLabelDao.getIfLabel(getNodeId(), addr(ipAddress));
                 if (m_iflabel != null) { // See Bug 3488
-                    m_ifInfo.putAll(ifLabel.getInterfaceInfoFromIfLabel(getNodeId(), m_iflabel));
+                    m_ifInfo.putAll(m_ifLabelDao.getInterfaceInfoFromIfLabel(getNodeId(), m_iflabel));
                 } else {
                     LOG.info("Can't find ifLabel for latency resource {} on node {}", resource.getInstance(), getNodeId());
                 }

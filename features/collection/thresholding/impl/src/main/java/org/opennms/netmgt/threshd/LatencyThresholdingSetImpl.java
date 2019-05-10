@@ -36,11 +36,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.opennms.netmgt.collection.api.CollectionAttribute;
-import org.opennms.netmgt.collection.api.CollectionAttributeType;
-import org.opennms.netmgt.collection.api.CollectionResource;
 import org.opennms.netmgt.collection.api.LatencyCollectionAttribute;
 import org.opennms.netmgt.collection.api.LatencyCollectionAttributeType;
 import org.opennms.netmgt.collection.api.LatencyCollectionResource;
+import org.opennms.netmgt.dao.api.IfLabel;
 import org.opennms.netmgt.dao.api.ResourceStorageDao;
 import org.opennms.netmgt.rrd.RrdRepository;
 import org.opennms.netmgt.xml.event.Event;
@@ -58,6 +57,8 @@ public class LatencyThresholdingSetImpl extends ThresholdingSetImpl implements L
 
     private final ResourceStorageDao m_resourceStorageDao;
 
+    private IfLabel m_ifLabelDao;
+
     /**
      * <p>Constructor for LatencyThresholdingSet.</p>
      *
@@ -68,10 +69,12 @@ public class LatencyThresholdingSetImpl extends ThresholdingSetImpl implements L
      * @param interval a long.
      * @throws ThresholdInitializationException 
      */
-    public LatencyThresholdingSetImpl(int nodeId, String hostAddress, String serviceName, String location, RrdRepository repository, ResourceStorageDao resourceStorageDao) throws ThresholdInitializationException {
+    public LatencyThresholdingSetImpl(int nodeId, String hostAddress, String serviceName, String location, RrdRepository repository, ResourceStorageDao resourceStorageDao,
+            IfLabel ifLabelDao) throws ThresholdInitializationException {
         super(nodeId, hostAddress, serviceName, repository);
         m_resourceStorageDao = resourceStorageDao;
         m_location = location;
+        m_ifLabelDao = ifLabelDao;
     }
 
     /*
@@ -109,7 +112,8 @@ public class LatencyThresholdingSetImpl extends ThresholdingSetImpl implements L
         //The timestamp is irrelevant; latency is never a COUNTER (which is the only reason the date is used).  
         //Yes, we have to know a little too much about the implementation details of CollectionResourceWrapper to say that, but
         // we have little choice
-        CollectionResourceWrapper resourceWrapper = new CollectionResourceWrapper(new Date(), m_nodeId, m_hostAddress, m_serviceName, m_repository, latencyResource, attributesMap, m_resourceStorageDao);
+        CollectionResourceWrapper resourceWrapper = new CollectionResourceWrapper(new Date(), m_nodeId, m_hostAddress, m_serviceName, m_repository, latencyResource, attributesMap,
+                                                                                  m_resourceStorageDao, m_ifLabelDao);
         return Collections.unmodifiableList(applyThresholds(resourceWrapper, attributesMap));
     }
 

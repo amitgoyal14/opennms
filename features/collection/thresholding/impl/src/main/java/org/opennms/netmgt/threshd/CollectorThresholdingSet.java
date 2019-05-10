@@ -110,7 +110,7 @@ public class CollectorThresholdingSet extends ThresholdingSetImpl {
         }
 		CollectionResourceWrapper resourceWrapper = new CollectionResourceWrapper(
 				collectionTimestamp, m_nodeId, m_hostAddress, m_serviceName,
-				m_repository, resource, attributesMap, m_resourceStorageDao);
+				m_repository, resource, attributesMap, m_resourceStorageDao, null);
 		resourceWrapper.setCounterReset(counterReset);
         return applyThresholds(resourceWrapper, attributesMap);
     }
