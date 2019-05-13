@@ -1456,6 +1456,10 @@ public class Collectd extends AbstractServiceDaemon implements
         m_serviceCollectorRegistry = serviceCollectorRegistry;
     }
 
+    public void setThresholdingFactory(ThresholdingFactory thresholdingFactory) {
+        m_thresholdingFactory = thresholdingFactory;
+    }
+
     public void setLocationAwareCollectorClient(LocationAwareCollectorClient locationAwareCollectorClient) {
         m_locationAwareCollectorClient = locationAwareCollectorClient;
     }

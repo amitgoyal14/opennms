@@ -32,9 +32,12 @@ import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.eq;
 
 import java.io.File;
+import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.easymock.EasyMock;
 import org.junit.Assert;
@@ -45,6 +48,8 @@ import org.opennms.core.test.LoggingEvent;
 import org.opennms.core.test.MockLogAppender;
 import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.InsufficientInformationException;
+import org.opennms.netmgt.collection.api.CollectionResource;
+import org.opennms.netmgt.collection.api.CollectionSetVisitor;
 import org.opennms.netmgt.collection.support.DefaultServiceCollectorRegistry;
 import org.opennms.netmgt.collection.test.api.CollectorTestUtils;
 import org.opennms.netmgt.config.CollectdConfigFactory;
@@ -69,6 +74,7 @@ import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsServiceType;
 import org.opennms.netmgt.model.events.EventBuilder;
+import org.opennms.netmgt.threshd.ThresholdingFactory;
 import org.opennms.test.mock.EasyMockUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,6 +113,8 @@ public class DuplicatePrimaryAddressIT {
 
     /** The Filter DAO instance. */
     private FilterDao m_filterDao;
+
+    private ThresholdingFactory m_thresholdingFactory;
 
     @Before
     public void setUp() {
@@ -194,6 +202,10 @@ public class DuplicatePrimaryAddressIT {
 
         m_ifaceDao = m_mockUtils.createMock(IpInterfaceDao.class);
         m_nodeDao = m_mockUtils.createMock(NodeDao.class);
+        m_thresholdingFactory = m_mockUtils.createMock(ThresholdingFactory.class);
+        CollectionSetVisitor mockThresholdingVisitor = m_mockUtils.createMock(CollectionSetVisitor.class);
+        EasyMock.expectLastCall(mockThresholdingVisitor.visitResource((CollectionResource) anyObject(CollectionResource.class)));
+        EasyMock.expect(m_thresholdingFactory.createThresholder()).andReturn(mockThresholdingVisitor);
 
         m_collectd = new Collectd() {
             @Override
@@ -224,6 +236,7 @@ public class DuplicatePrimaryAddressIT {
 
         m_filterDao.flushActiveIpAddressListCache();
         EasyMock.expectLastCall().anyTimes();
+        EasyMock.expect(m_filterDao.getActiveIPAddressList("IPADDR IPLIKE *.*.*.*")).andReturn(initialIfs.stream().map(OnmsIpInterface::getIpAddress).collect(Collectors.toList())).anyTimes();
 
         EasyMock.expect(m_nodeDao.load(1)).andReturn(n1).anyTimes();
         EasyMock.expect(m_nodeDao.load(3)).andReturn(n2).anyTimes();
@@ -244,6 +257,7 @@ public class DuplicatePrimaryAddressIT {
         m_collectd.setIpInterfaceDao(m_ifaceDao);
         m_collectd.setNodeDao(m_nodeDao);
         m_collectd.setFilterDao(m_filterDao);
+        m_collectd.setThresholdingFactory(m_thresholdingFactory);
         m_collectd.setPersisterFactory(new MockPersisterFactory());
         m_collectd.setServiceCollectorRegistry(new DefaultServiceCollectorRegistry());
         m_collectd.setLocationAwareCollectorClient(CollectorTestUtils.createLocationAwareCollectorClient());
