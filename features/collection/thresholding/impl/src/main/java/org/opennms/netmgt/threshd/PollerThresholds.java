@@ -55,9 +55,6 @@ public class PollerThresholds {
 
     private static ResourceStorageDao m_resourceStorageDao; // TODO where should this best come from?
 
-    @Autowired
-    private IfLabel m_ifLabelDao;
-
     public void applyThresholds(String rrdPath, MonitoredService service, String dsName, Map<String, Number> entries) {
         try {
             if (m_thresholdingSet == null) {
@@ -68,8 +65,7 @@ public class PollerThresholds {
                                                                service.getSvcName(), 
                                                                service.getNodeLocation(), 
                                                                repository,
-                                                               m_resourceStorageDao, 
-                                                               m_ifLabelDao);
+                                                               m_resourceStorageDao);
             }
             LinkedHashMap<String, Double> attributes = new LinkedHashMap<String, Double>();
             for (String ds : entries.keySet()) {
@@ -83,7 +79,7 @@ public class PollerThresholds {
             if (m_thresholdingSet.isNodeInOutage()) {
                 LOG.info("applyThresholds: the threshold processing will be skipped because the service {} is on a scheduled outage.", service);
             } else if (m_thresholdingSet.hasThresholds(attributes)) {
-                List<Event> events = m_thresholdingSet.applyThresholds(dsName, attributes);
+                List<Event> events = m_thresholdingSet.applyThresholds(dsName, attributes, null);
                 if (events.size() > 0) {
                     ThresholdingEventProxy proxy = new ThresholdingEventProxy();
                     proxy.add(events);

@@ -269,7 +269,7 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
     public void testBug3488() throws Exception {
         String ipAddress = "127.0.0.1";
         setupSnmpInterfaceDatabase(m_db, ipAddress, null);
-        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, ipAddress, "HTTP", null, getRepository(), m_resourceStorageDao, m_ifLabelDao);
+        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, ipAddress, "HTTP", null, getRepository(), m_resourceStorageDao);
         assertTrue(thresholdingSet.hasThresholds()); // Global Test
         Map<String, Double> attributes = new HashMap<String, Double>();
         attributes.put("http", 200.0);
@@ -277,7 +277,7 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
 
         List<Event> triggerEvents = new ArrayList<>();
         for (int i=0; i<5; i++)
-            triggerEvents.addAll(thresholdingSet.applyThresholds("http", attributes));
+            triggerEvents.addAll(thresholdingSet.applyThresholds("http", attributes, m_ifLabelDao));
         assertTrue(triggerEvents.size() == 1);
 
         addEvent(EventConstants.HIGH_THRESHOLD_EVENT_UEI, "127.0.0.1", "HTTP", 5, 100.0, 50.0, 200.0, IfLabel.NO_IFLABEL, "127.0.0.1[http]", "http", IfLabel.NO_IFLABEL, null, m_eventIpcManager.getEventAnticipator(), m_anticipatedEvents);
@@ -299,7 +299,7 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
         String ipAddress = "127.0.0.1";
         String ifName = "eth0";
         setupSnmpInterfaceDatabase(m_db, ipAddress, ifName);
-        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, ipAddress, "StrafePing", null, getRepository(), m_resourceStorageDao, m_ifLabelDao);
+        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, ipAddress, "StrafePing", null, getRepository(), m_resourceStorageDao);
         assertTrue(thresholdingSet.hasThresholds());
         Map<String, Double> attributes = new HashMap<String, Double>();
         for (double i=1; i<21; i++) {
@@ -309,7 +309,7 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
         attributes.put("median", 100.0);
         attributes.put(PollStatus.PROPERTY_RESPONSE_TIME, 100.0);
         assertTrue(thresholdingSet.hasThresholds(attributes));
-        List<Event> triggerEvents = thresholdingSet.applyThresholds("StrafePing", attributes);
+        List<Event> triggerEvents = thresholdingSet.applyThresholds("StrafePing", attributes, m_ifLabelDao);
         assertTrue(triggerEvents.size() == 1);
         addEvent(EventConstants.HIGH_THRESHOLD_EVENT_UEI, "127.0.0.1", "StrafePing", 1, 50.0, 25.0, 60.0, ifName, "127.0.0.1[StrafePing]", "loss", "eth0", null, m_eventIpcManager.getEventAnticipator(), m_anticipatedEvents);
         ThresholdingEventProxy proxy = new ThresholdingEventProxy();
@@ -331,12 +331,12 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
         String ifName = "lo0";
         setupSnmpInterfaceDatabase(m_db, "127.0.0.1", ifName);
 
-        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, "127.0.0.1", "HTTP", null, getRepository(), m_resourceStorageDao, m_ifLabelDao);
+        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, "127.0.0.1", "HTTP", null, getRepository(), m_resourceStorageDao);
         assertTrue(thresholdingSet.hasThresholds()); // Global Test
         Map<String, Double> attributes = new HashMap<String, Double>();
         attributes.put("http", 90.0);
         assertTrue(thresholdingSet.hasThresholds(attributes)); // Datasource Test
-        List<Event> triggerEvents = thresholdingSet.applyThresholds("http", attributes);
+        List<Event> triggerEvents = thresholdingSet.applyThresholds("http", attributes, m_ifLabelDao);
         assertTrue(triggerEvents.size() == 0);
 
         // Test Trigger
@@ -344,13 +344,13 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
         for (int i = 1; i < 5; i++) {
             LOG.debug("testLatencyThresholdingSet: run number {}", i);
             if (thresholdingSet.hasThresholds(attributes)) {
-                triggerEvents = thresholdingSet.applyThresholds("http", attributes);
+                triggerEvents = thresholdingSet.applyThresholds("http", attributes, m_ifLabelDao);
                 assertTrue(triggerEvents.size() == 0);
             }
         }
         if (thresholdingSet.hasThresholds(attributes)) {
             LOG.debug("testLatencyThresholdingSet: run number 5");
-            triggerEvents = thresholdingSet.applyThresholds("http", attributes);
+            triggerEvents = thresholdingSet.applyThresholds("http", attributes, m_ifLabelDao);
             assertTrue(triggerEvents.size() == 1);
         }
         
@@ -358,7 +358,7 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
         List<Event> rearmEvents = null;
         if (thresholdingSet.hasThresholds(attributes)) {
             attributes.put("http", 40.0);
-            rearmEvents = thresholdingSet.applyThresholds("http", attributes);
+            rearmEvents = thresholdingSet.applyThresholds("http", attributes, m_ifLabelDao);
             assertTrue(rearmEvents.size() == 1);
         }
 
@@ -385,12 +385,12 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
         String ifName = "lo0";
         setupSnmpInterfaceDatabase(m_db, "127.0.0.1", ifName);
 
-        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, "127.0.0.1", "HTTP", null, getRepository(), m_resourceStorageDao, m_ifLabelDao);
+        LatencyThresholdingSetImpl thresholdingSet = new LatencyThresholdingSetImpl(1, "127.0.0.1", "HTTP", null, getRepository(), m_resourceStorageDao);
         assertTrue(thresholdingSet.hasThresholds()); // Global Test
         Map<String, Double> attributes = new HashMap<String, Double>();
         attributes.put("http", 90.0);
         assertTrue(thresholdingSet.hasThresholds(attributes)); // Datasource Test
-        List<Event> triggerEvents = thresholdingSet.applyThresholds("http", attributes);
+        List<Event> triggerEvents = thresholdingSet.applyThresholds("http", attributes, m_ifLabelDao);
         assertTrue(triggerEvents.size() == 0);
 
         // Testing trigger the threshold 3 times
@@ -398,7 +398,7 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
         for (int i = 1; i <= 3; i++) {
             LOG.debug("testLatencyThresholdingSet: ------------------------------------ trigger number {}", i);
             if (thresholdingSet.hasThresholds(attributes)) {
-                triggerEvents = thresholdingSet.applyThresholds("http", attributes);
+                triggerEvents = thresholdingSet.applyThresholds("http", attributes, m_ifLabelDao);
                 assertTrue(triggerEvents.size() == 0);
             }
         }
@@ -407,14 +407,14 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
         // This should reset the counter
         attributes.put("http", 40.0);
         LOG.debug("testLatencyThresholdingSet: ------------------------------------ reseting counter");
-        triggerEvents = thresholdingSet.applyThresholds("http", attributes);
+        triggerEvents = thresholdingSet.applyThresholds("http", attributes, m_ifLabelDao);
 
         // Increase the counter again two times, no threshold should be generated
         attributes.put("http", 300.0);
         for (int i = 4; i <= 5; i++) {
             LOG.debug("testLatencyThresholdingSet: ------------------------------------ trigger number {}", i);
             if (thresholdingSet.hasThresholds(attributes)) {
-                triggerEvents = thresholdingSet.applyThresholds("http", attributes);
+                triggerEvents = thresholdingSet.applyThresholds("http", attributes, m_ifLabelDao);
                 assertTrue(triggerEvents.size() == 0);
             }
         }
@@ -423,7 +423,7 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
         for (int i = 6; i <= 8; i++) {
             LOG.debug("testLatencyThresholdingSet: ------------------------------------ trigger number {}", i);
             if (thresholdingSet.hasThresholds(attributes)) {
-                triggerEvents = thresholdingSet.applyThresholds("http", attributes);
+                triggerEvents = thresholdingSet.applyThresholds("http", attributes, m_ifLabelDao);
                 if (i < 8)
                     assertTrue(triggerEvents.size() == 0);
             }

@@ -28,61 +28,12 @@
 
 package org.opennms.netmgt.threshd;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-
-import org.easymock.EasyMock;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.opennms.core.db.DataSourceFactory;
-import org.opennms.core.rpc.mock.MockRpcClientFactory;
 import org.opennms.core.test.MockLogAppender;
-import org.opennms.core.test.db.MockDatabase;
-/*import org.opennms.netmgt.collectd.GenericIndexResource;
-import org.opennms.netmgt.collectd.GenericIndexResourceType;
-import org.opennms.netmgt.collectd.IfInfo;
-import org.opennms.netmgt.collectd.IfResourceType;
-import org.opennms.netmgt.collectd.NodeInfo;
-import org.opennms.netmgt.collectd.NodeResourceType;
-import org.opennms.netmgt.collectd.NumericAttributeType;
-import org.opennms.netmgt.collectd.OnmsSnmpCollection;
-import org.opennms.netmgt.collectd.SnmpAttribute;
-import org.opennms.netmgt.collectd.SnmpAttributeType;
-import org.opennms.netmgt.collectd.SnmpCollectionAgent;
-import org.opennms.netmgt.collectd.SnmpCollectionResource;
-import org.opennms.netmgt.collectd.SnmpIfData;*/
-import org.opennms.netmgt.collection.api.AttributeGroupType;
-import org.opennms.netmgt.collection.api.AttributeType;
-import org.opennms.netmgt.collection.api.CollectionAttribute;
-import org.opennms.netmgt.collection.api.Persister;
-import org.opennms.netmgt.collection.api.ServiceParameters;
-import org.opennms.netmgt.config.datacollection.MibObject;
-import org.opennms.netmgt.config.datacollection.Parameter;
-import org.opennms.netmgt.config.datacollection.PersistenceSelectorStrategy;
-import org.opennms.netmgt.config.datacollection.ResourceType;
-import org.opennms.netmgt.config.datacollection.StorageStrategy;
-import org.opennms.netmgt.dao.api.ResourceStorageDao;
-import org.opennms.netmgt.dao.support.FilesystemResourceStorageDao;
-// FIXME import org.opennms.netmgt.mock.MockDataCollectionConfig;
-import org.opennms.netmgt.mock.MockNetwork;
-import org.opennms.netmgt.model.OnmsNode;
-import org.opennms.netmgt.model.OnmsSnmpInterface;
-import org.opennms.netmgt.model.ResourcePath;
-import org.opennms.netmgt.model.ResourceTypeUtils;
-import org.opennms.netmgt.rrd.RrdRepository;
-import org.opennms.netmgt.snmp.SnmpInstId;
-import org.opennms.netmgt.snmp.SnmpUtils;
-import org.opennms.netmgt.snmp.SnmpValue;
-import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
-// FIXME import org.opennms.netmgt.snmp.proxy.common.LocationAwareSnmpClientRpcImpl;
 
 /**
  * @author <a href="mailto:agalue@opennms.org">Alejandro Galue</a>
@@ -131,7 +82,7 @@ public class CollectionResourceWrapperIT {
     @Test(expected=IllegalArgumentException.class)
     public void testBadConstructorCall() throws Throwable {
         try {
-            new CollectionResourceWrapper(null, 1, "127.0.0.1", "HTTP", null, null, null, null, null);
+            new CollectionResourceWrapper(null, 1, "127.0.0.1", "HTTP", null, null, null, null);
         } catch (Throwable e) {
             //e.printStackTrace();
             throw e;
@@ -141,7 +92,7 @@ public class CollectionResourceWrapperIT {
     @Test(expected=IllegalArgumentException.class)
     public void testBadderConstructorCall() throws Throwable {
         try {
-            new CollectionResourceWrapper(null, -1, null, null, null, null, null, null, null);
+            new CollectionResourceWrapper(null, -1, null, null, null, null, null, null);
         } catch (Throwable e) {
             e.printStackTrace();
             throw e;

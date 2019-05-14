@@ -204,7 +204,7 @@ public class DuplicatePrimaryAddressIT {
         m_nodeDao = m_mockUtils.createMock(NodeDao.class);
         m_thresholdingFactory = m_mockUtils.createMock(ThresholdingFactory.class);
         CollectionSetVisitor mockThresholdingVisitor = m_mockUtils.createMock(CollectionSetVisitor.class);
-        EasyMock.expectLastCall(mockThresholdingVisitor.visitResource((CollectionResource) anyObject(CollectionResource.class)));
+        // EasyMock.expectLastCall(mockThresholdingVisitor.visitResource((CollectionResource) anyObject(CollectionResource.class)));
         EasyMock.expect(m_thresholdingFactory.createThresholder()).andReturn(mockThresholdingVisitor);
 
         m_collectd = new Collectd() {

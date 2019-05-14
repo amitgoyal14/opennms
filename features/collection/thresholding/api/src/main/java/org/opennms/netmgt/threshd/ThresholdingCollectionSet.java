@@ -28,22 +28,7 @@
 
 package org.opennms.netmgt.threshd;
 
-import org.opennms.netmgt.collection.api.CollectionSetVisitor;
-import org.opennms.netmgt.collection.api.ServiceParameters;
-import org.opennms.netmgt.dao.api.ResourceStorageDao;
-import org.opennms.netmgt.rrd.RrdRepository;
-
-/**
- * Creates a ThresholdingCollectionSetVisitor
- */
-public interface ThresholdingFactory {
-
-    @Deprecated
-    CollectionSetVisitor createThresholder();
-
-    CollectionSetVisitor createThresholder(int nodeId, String hostAddress, String serviceName, RrdRepository repo, ServiceParameters svcParams,
-            ResourceStorageDao resourceStorageDao) throws ThresholdInitializationException;
-
-    // public CollectionSetVisitor createThresholder(ThresholdingCollectionSet thresholdingSet);
+//  TODO - would be good if could extend this... public interface ThresholdingCollectionSet extends CollectionSet {
+public interface ThresholdingCollectionSet {
 
 }

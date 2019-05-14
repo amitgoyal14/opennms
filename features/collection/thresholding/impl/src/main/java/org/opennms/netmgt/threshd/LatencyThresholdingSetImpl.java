@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.netmgt.collection.api.CollectionAttribute;
 import org.opennms.netmgt.collection.api.LatencyCollectionAttribute;
 import org.opennms.netmgt.collection.api.LatencyCollectionAttributeType;
@@ -57,8 +58,6 @@ public class LatencyThresholdingSetImpl extends ThresholdingSetImpl implements L
 
     private final ResourceStorageDao m_resourceStorageDao;
 
-    private IfLabel m_ifLabelDao;
-
     /**
      * <p>Constructor for LatencyThresholdingSet.</p>
      *
@@ -69,12 +68,11 @@ public class LatencyThresholdingSetImpl extends ThresholdingSetImpl implements L
      * @param interval a long.
      * @throws ThresholdInitializationException 
      */
-    public LatencyThresholdingSetImpl(int nodeId, String hostAddress, String serviceName, String location, RrdRepository repository, ResourceStorageDao resourceStorageDao,
-            IfLabel ifLabelDao) throws ThresholdInitializationException {
+    public LatencyThresholdingSetImpl(int nodeId, String hostAddress, String serviceName, String location, RrdRepository repository, ResourceStorageDao resourceStorageDao)
+            throws ThresholdInitializationException {
         super(nodeId, hostAddress, serviceName, repository);
         m_resourceStorageDao = resourceStorageDao;
         m_location = location;
-        m_ifLabelDao = ifLabelDao;
     }
 
     /*
@@ -101,8 +99,16 @@ public class LatencyThresholdingSetImpl extends ThresholdingSetImpl implements L
      * Return a list of events to be send if some thresholds must be triggered or be rearmed.
      */
     /** {@inheritDoc} */
-    public List<Event> applyThresholds(String svcName, Map<String, Double> attributes) {
-        LatencyCollectionResource latencyResource = new LatencyCollectionResource(svcName, m_hostAddress, m_location);
+    public List<Event> applyThresholds(String svcName, Map<String, Double> attributes, IfLabel ifLabelDao) {
+        String ifLabel = "";
+        Map<String, String> ifInfo = new HashMap<>();
+        if (ifLabelDao != null) {
+            ifLabel = ifLabelDao.getIfLabel(m_nodeId, InetAddressUtils.addr(m_hostAddress));
+            if (ifLabel != null) {
+                ifInfo = ifLabelDao.getInterfaceInfoFromIfLabel(m_nodeId, ifLabel);
+            }
+        }
+        LatencyCollectionResource latencyResource = new LatencyCollectionResource(svcName, m_hostAddress, m_location, ifLabel, ifInfo);
         LatencyCollectionAttributeType latencyType = new LatencyCollectionAttributeType();
         Map<String, CollectionAttribute> attributesMap = new HashMap<String, CollectionAttribute>();
         for (final Entry<String, Double> entry : attributes.entrySet()) {
@@ -113,7 +119,7 @@ public class LatencyThresholdingSetImpl extends ThresholdingSetImpl implements L
         //Yes, we have to know a little too much about the implementation details of CollectionResourceWrapper to say that, but
         // we have little choice
         CollectionResourceWrapper resourceWrapper = new CollectionResourceWrapper(new Date(), m_nodeId, m_hostAddress, m_serviceName, m_repository, latencyResource, attributesMap,
-                                                                                  m_resourceStorageDao, m_ifLabelDao);
+                                                                                  m_resourceStorageDao);
         return Collections.unmodifiableList(applyThresholds(resourceWrapper, attributesMap));
     }
 

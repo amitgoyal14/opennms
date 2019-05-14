@@ -31,10 +31,12 @@ package org.opennms.netmgt.poller.pollables;
 import java.io.File;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.opennms.core.utils.InetAddressUtils;
 import org.opennms.core.utils.ParameterMap;
 import org.opennms.netmgt.collection.api.CollectionSetVisitor;
 import org.opennms.netmgt.collection.api.CollectionStatus;
@@ -46,11 +48,13 @@ import org.opennms.netmgt.collection.api.ServiceParameters;
 import org.opennms.netmgt.collection.support.SingleResourceCollectionSet;
 import org.opennms.netmgt.config.PollerConfig;
 import org.opennms.netmgt.config.poller.Package;
+import org.opennms.netmgt.dao.api.IfLabel;
 import org.opennms.netmgt.dao.api.ResourceStorageDao;
 import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.poller.ServiceMonitorAdaptor;
 import org.opennms.netmgt.rrd.RrdRepository;
+import org.opennms.netmgt.threshd.ThresholdInitializationException;
 import org.opennms.netmgt.threshd.ThresholdingFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,11 +76,17 @@ public class LatencyStoringServiceMonitorAdaptor implements ServiceMonitorAdapto
     private final PersisterFactory m_persisterFactory;
     private final ThresholdingFactory m_thresholdingFactory;
 
-    public LatencyStoringServiceMonitorAdaptor(PollerConfig config, Package pkg, PersisterFactory persisterFactory, ThresholdingFactory thresholdingFactory) {
+    private final IfLabel m_ifLabelDao;
+    private ResourceStorageDao m_resourceStorageDao;
+
+    public LatencyStoringServiceMonitorAdaptor(PollerConfig config, Package pkg, PersisterFactory persisterFactory, ThresholdingFactory thresholdingFactory,
+            ResourceStorageDao resourceStorageDao, IfLabel ifLabelDao) {
         m_pollerConfig = config;
         m_pkg = pkg;
         m_persisterFactory = persisterFactory;
         m_thresholdingFactory = thresholdingFactory;
+        m_ifLabelDao = ifLabelDao;
+        m_resourceStorageDao = resourceStorageDao;
     }
 
     @Override
@@ -120,7 +130,15 @@ public class LatencyStoringServiceMonitorAdaptor implements ServiceMonitorAdapto
         // 2) If multiple entries are present, the DSs are created in the same order that they
         //    appear in the map
 
-        LatencyCollectionResource latencyResource = new LatencyCollectionResource(service.getSvcName(), service.getIpAddr(), service.getNodeLocation());
+        String ifLabel = "";
+        Map<String, String> ifInfo = new HashMap<>();
+        if (m_ifLabelDao != null) {
+            ifLabel = m_ifLabelDao.getIfLabel(service.getNodeId(), InetAddressUtils.addr(service.getIpAddr()));
+            if (ifLabel != null) {
+                ifInfo.putAll(m_ifLabelDao.getInterfaceInfoFromIfLabel(service.getNodeId(), ifLabel));
+            }
+        }
+        LatencyCollectionResource latencyResource = new LatencyCollectionResource(service.getSvcName(), service.getIpAddr(), service.getNodeLocation(), ifLabel, ifInfo);
         for (final Entry<String, Number> entry : entries.entrySet()) {
             final String ds = entry.getKey();
             final Number value = entry.getValue() != null ? entry.getValue() : Double.NaN;
@@ -134,8 +152,13 @@ public class LatencyStoringServiceMonitorAdaptor implements ServiceMonitorAdapto
 
         CollectionSetVisitor persister = m_persisterFactory.createPersister(params, repository, false, true, true);
         collectionSet.visit(persister);
-        CollectionSetVisitor thresholder = m_thresholdingFactory.createThresholder();
-        collectionSet.visit(thresholder);
+        try {
+            CollectionSetVisitor thresholder = m_thresholdingFactory.createThresholder(
+                service.getNodeId(), service.getIpAddr(), service.getSvcName(), repository, params, m_resourceStorageDao);
+            collectionSet.visit(thresholder);
+        } catch (ThresholdInitializationException e) {
+            LOG.error("Failed to create Thresholding processor", e);
+        }
     }
 
 }

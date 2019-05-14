@@ -44,6 +44,7 @@ import org.opennms.netmgt.config.PollOutagesConfig;
 import org.opennms.netmgt.config.PollerConfig;
 import org.opennms.netmgt.config.poller.Package;
 import org.opennms.netmgt.daemon.AbstractServiceDaemon;
+import org.opennms.netmgt.dao.api.IfLabel;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.dao.api.OutageDao;
 import org.opennms.netmgt.dao.api.ResourceStorageDao;
@@ -114,7 +115,13 @@ public class Poller extends AbstractServiceDaemon {
     private PersisterFactory m_persisterFactory;
 
     @Autowired
+    private ResourceStorageDao m_resourceStorageDao;
+
+    @Autowired
     private ThresholdingFactory m_thresholdingFactory;
+
+    @Autowired
+    private IfLabel m_ifLabelDao;
 
     @Autowired
     private LocationAwarePollerClient m_locationAwarePollerClient;
@@ -526,7 +533,8 @@ public class Poller extends AbstractServiceDaemon {
 
         PollableService svc = getNetwork().createService(service.getNodeId(), iface.getNode().getLabel(), iface.getNode().getLocation().getLocationName(), addr, serviceName);
         PollableServiceConfig pollConfig = new PollableServiceConfig(svc, m_pollerConfig, m_pollOutagesConfig, pkg,
-                                                                     getScheduler(), m_persisterFactory, m_thresholdingFactory, m_locationAwarePollerClient);
+                                                                     getScheduler(), m_persisterFactory, m_thresholdingFactory, m_resourceStorageDao,
+                                                                     m_locationAwarePollerClient, m_ifLabelDao);
         svc.setPollConfig(pollConfig);
         synchronized(svc) {
             if (svc.getSchedule() == null) {

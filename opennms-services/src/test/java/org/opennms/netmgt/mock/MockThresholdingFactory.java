@@ -29,12 +29,22 @@
 package org.opennms.netmgt.mock;
 
 import org.opennms.netmgt.collection.api.CollectionSetVisitor;
+import org.opennms.netmgt.collection.api.ServiceParameters;
+import org.opennms.netmgt.dao.api.ResourceStorageDao;
+import org.opennms.netmgt.rrd.RrdRepository;
+import org.opennms.netmgt.threshd.ThresholdInitializationException;
 import org.opennms.netmgt.threshd.ThresholdingFactory;
 
 public class MockThresholdingFactory implements ThresholdingFactory {
 
     @Override
     public CollectionSetVisitor createThresholder() {
+        return new MockThresholder();
+    }
+
+    @Override
+    public CollectionSetVisitor createThresholder(int nodeId, String hostAddress, String serviceName, RrdRepository repo, ServiceParameters svcParams,
+            ResourceStorageDao resourceStorageDao) throws ThresholdInitializationException {
         return new MockThresholder();
     }
 

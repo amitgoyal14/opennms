@@ -28,8 +28,6 @@
 
 package org.opennms.netmgt.threshd;
 
-import static org.opennms.core.utils.InetAddressUtils.addr;
-
 import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
@@ -42,7 +40,6 @@ import org.opennms.netmgt.collection.api.AttributeType;
 import org.opennms.netmgt.collection.api.CollectionAttribute;
 import org.opennms.netmgt.collection.api.CollectionResource;
 import org.opennms.netmgt.collection.api.LatencyCollectionResource;
-import org.opennms.netmgt.dao.api.IfLabel;
 import org.opennms.netmgt.dao.api.ResourceStorageDao;
 import org.opennms.netmgt.model.ResourceId;
 import org.opennms.netmgt.model.ResourcePath;
@@ -50,7 +47,6 @@ import org.opennms.netmgt.model.ResourceTypeUtils;
 import org.opennms.netmgt.rrd.RrdRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * <p>CollectionResourceWrapper class.</p>
@@ -134,9 +130,6 @@ public class CollectionResourceWrapper {
      */
     private boolean m_counterReset = false;
 
-    @Autowired
-    private IfLabel m_ifLabelDao;
-
     /**
      * <p>Constructor for CollectionResourceWrapper.</p>
      *
@@ -150,7 +143,7 @@ public class CollectionResourceWrapper {
      */
     public CollectionResourceWrapper(Date collectionTimestamp, int nodeId, String hostAddress, String serviceName,
             RrdRepository repository, CollectionResource resource, Map<String, CollectionAttribute> attributes,
-            ResourceStorageDao resourceStorageDao, IfLabel ifLabelDao) {
+            ResourceStorageDao resourceStorageDao) {
 
         if (collectionTimestamp == null) {
             throw new IllegalArgumentException(String.format("%s: Null collection timestamp when thresholding service %s on node %d (%s)", this.getClass().getSimpleName(), serviceName, nodeId, hostAddress));
@@ -164,7 +157,6 @@ public class CollectionResourceWrapper {
         m_resource = resource;
         m_attributes = attributes;
         m_resourceStorageDao = resourceStorageDao;
-        m_ifLabelDao = ifLabelDao;
 
         if (isAnInterfaceResource()) {
             if (resource instanceof AliasedResource) { // TODO What about AliasedResource's custom attributes?
@@ -175,10 +167,9 @@ public class CollectionResourceWrapper {
                 m_iflabel = ((IfInfo) resource).getInterfaceLabel();
                 m_ifInfo.putAll(((IfInfo) resource).getAttributesMap());
             } else if (resource instanceof LatencyCollectionResource) {
-                String ipAddress = ((LatencyCollectionResource) resource).getIpAddress();
-                m_iflabel = m_ifLabelDao.getIfLabel(getNodeId(), addr(ipAddress));
+                m_iflabel = ((LatencyCollectionResource) resource).getIfLabel();
                 if (m_iflabel != null) { // See Bug 3488
-                    m_ifInfo.putAll(m_ifLabelDao.getInterfaceInfoFromIfLabel(getNodeId(), m_iflabel));
+                    m_ifInfo.putAll(((LatencyCollectionResource) resource).getIfInfo());
                 } else {
                     LOG.info("Can't find ifLabel for latency resource {} on node {}", resource.getInstance(), getNodeId());
                 }

@@ -108,9 +108,9 @@ public class CollectorThresholdingSet extends ThresholdingSetImpl {
             LOG.debug("applyThresholds: Ignoring resource {} because data collection is disabled for this resource.", resource);
             return new LinkedList<>();
         }
-		CollectionResourceWrapper resourceWrapper = new CollectionResourceWrapper(
+        CollectionResourceWrapper resourceWrapper = new CollectionResourceWrapper(
 				collectionTimestamp, m_nodeId, m_hostAddress, m_serviceName,
-				m_repository, resource, attributesMap, m_resourceStorageDao, null);
+                                                                                  m_repository, resource, attributesMap, m_resourceStorageDao);
 		resourceWrapper.setCounterReset(counterReset);
         return applyThresholds(resourceWrapper, attributesMap);
     }

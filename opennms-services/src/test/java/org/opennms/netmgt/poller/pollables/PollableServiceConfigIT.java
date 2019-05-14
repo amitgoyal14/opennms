@@ -48,12 +48,14 @@ import org.mockito.Mockito;
 import org.opennms.core.rpc.api.RequestTimedOutException;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.utils.InetAddressUtils;
+import org.opennms.netmgt.collection.api.CollectionSetVisitor;
 import org.opennms.netmgt.collection.api.PersisterFactory;
 import org.opennms.netmgt.config.PollOutagesConfig;
 import org.opennms.netmgt.config.PollerConfig;
 import org.opennms.netmgt.config.PollerConfigFactory;
 import org.opennms.netmgt.config.poller.Package;
 import org.opennms.netmgt.config.poller.Service;
+import org.opennms.netmgt.dao.api.IfLabel;
 import org.opennms.netmgt.dao.api.ResourceStorageDao;
 import org.opennms.netmgt.dao.support.FilesystemResourceStorageDao;
 import org.opennms.netmgt.filter.FilterDaoFactory;
@@ -63,6 +65,7 @@ import org.opennms.netmgt.poller.LocationAwarePollerClient;
 import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.poller.PollerResponse;
 import org.opennms.netmgt.scheduler.Timer;
+import org.opennms.netmgt.threshd.CollectorThresholdingSet;
 import org.opennms.netmgt.threshd.ThresholdingFactory;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,6 +94,12 @@ public class PollableServiceConfigIT {
     @Autowired
     private ThresholdingFactory m_thresholdingFactory;
 
+    @Autowired
+    private IfLabel m_ifLabelDao;
+
+    @Autowired
+    private ResourceStorageDao m_resourceStorageDao;
+
     @Test
     public void testPollableServiceConfig() throws Exception {
         final FilterDao fd = mock(FilterDao.class);
@@ -113,7 +122,8 @@ public class PollableServiceConfigIT {
         final Package pkg = factory.getPackage("MapQuest");
         final Timer timer = mock(Timer.class);
         final PollableServiceConfig psc = new PollableServiceConfig(svc, factory, pollOutagesConfig, pkg, timer,
-                persisterFactory, m_thresholdingFactory, m_locationAwarePollerClient);
+                                                                    persisterFactory, m_thresholdingFactory, m_resourceStorageDao, 
+                                                                    m_locationAwarePollerClient, m_ifLabelDao);
         PollStatus pollStatus = psc.poll();
         assertThat(pollStatus.getReason(), not(containsString("Unexpected exception")));
     }
@@ -159,10 +169,12 @@ public class PollableServiceConfigIT {
         Timer timer = mock(Timer.class);
         PersisterFactory persisterFactory = mock(PersisterFactory.class);
         ThresholdingFactory thresholdingFactory = mock(ThresholdingFactory.class);
+        CollectionSetVisitor thresholdingVisitor = mock(CollectionSetVisitor.class);
+        when(thresholdingFactory.createThresholder()).thenReturn(thresholdingVisitor);
 
         final PollableServiceConfig psc = new PollableServiceConfig(pollableSvc, pollerConfig,
-                pollOutagesConfig, pkg, timer,
-                persisterFactory, thresholdingFactory, client);
+                pollOutagesConfig, pkg, timer, persisterFactory, thresholdingFactory, 
+                m_resourceStorageDao, client, m_ifLabelDao);
 
         // Trigger the poll
         PollStatus pollStatus = psc.poll();
