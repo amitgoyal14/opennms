@@ -28,12 +28,60 @@
 
 package org.opennms.netmgt.threshd;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
+import org.easymock.EasyMock;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.opennms.core.db.DataSourceFactory;
+import org.opennms.core.rpc.mock.MockRpcClientFactory;
 import org.opennms.core.test.MockLogAppender;
+import org.opennms.core.test.db.MockDatabase;
+import org.opennms.netmgt.collectd.GenericIndexResource;
+import org.opennms.netmgt.collectd.GenericIndexResourceType;
+import org.opennms.netmgt.collectd.IfInfo;
+import org.opennms.netmgt.collectd.IfResourceType;
+import org.opennms.netmgt.collectd.NodeInfo;
+import org.opennms.netmgt.collectd.NodeResourceType;
+import org.opennms.netmgt.collectd.NumericAttributeType;
+import org.opennms.netmgt.collectd.OnmsSnmpCollection;
+import org.opennms.netmgt.collectd.SnmpAttribute;
+import org.opennms.netmgt.collectd.SnmpAttributeType;
+import org.opennms.netmgt.collectd.SnmpCollectionAgent;
+import org.opennms.netmgt.collectd.SnmpCollectionResource;
+import org.opennms.netmgt.collectd.SnmpIfData;
+import org.opennms.netmgt.collection.api.AttributeGroupType;
+import org.opennms.netmgt.collection.api.AttributeType;
+import org.opennms.netmgt.collection.api.CollectionAttribute;
+import org.opennms.netmgt.collection.api.Persister;
+import org.opennms.netmgt.collection.api.ServiceParameters;
+import org.opennms.netmgt.config.datacollection.MibObject;
+import org.opennms.netmgt.config.datacollection.Parameter;
+import org.opennms.netmgt.config.datacollection.PersistenceSelectorStrategy;
+import org.opennms.netmgt.config.datacollection.ResourceType;
+import org.opennms.netmgt.config.datacollection.StorageStrategy;
+import org.opennms.netmgt.dao.api.ResourceStorageDao;
+import org.opennms.netmgt.dao.support.FilesystemResourceStorageDao;
+import org.opennms.netmgt.mock.MockNetwork;
+import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.model.OnmsSnmpInterface;
+import org.opennms.netmgt.model.ResourcePath;
+import org.opennms.netmgt.model.ResourceTypeUtils;
+import org.opennms.netmgt.rrd.RrdRepository;
+import org.opennms.netmgt.snmp.SnmpInstId;
+import org.opennms.netmgt.snmp.SnmpUtils;
+import org.opennms.netmgt.snmp.SnmpValue;
+import org.opennms.netmgt.snmp.proxy.LocationAwareSnmpClient;
+import org.opennms.netmgt.snmp.proxy.common.LocationAwareSnmpClientRpcImpl;
 
 /**
  * @author <a href="mailto:agalue@opennms.org">Alejandro Galue</a>
@@ -41,7 +89,8 @@ import org.opennms.core.test.MockLogAppender;
  */
 public class CollectionResourceWrapperIT {
     private boolean m_ignoreWarnings = false;
-    // FIXME private LocationAwareSnmpClient m_locationAwareSnmpClient = new LocationAwareSnmpClientRpcImpl(new MockRpcClientFactory());
+
+    private LocationAwareSnmpClient m_locationAwareSnmpClient = new LocationAwareSnmpClientRpcImpl(new MockRpcClientFactory());
 
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
@@ -59,7 +108,7 @@ public class CollectionResourceWrapperIT {
     
     @Test
     public void testGetGaugeValue() throws Exception {
-        /*        // Create Resource
+        // Create Resource
         SnmpCollectionAgent agent = createCollectionAgent();
         SnmpCollectionResource resource = createNodeResource(agent);
         
@@ -67,7 +116,7 @@ public class CollectionResourceWrapperIT {
         Map<String, CollectionAttribute> attributes = new HashMap<String, CollectionAttribute>();
         SnmpAttribute attribute = addAttributeToCollectionResource(resource, "myGauge", AttributeType.GAUGE, "0", "100");
         attributes.put(attribute.getName(), attribute);
-        
+
         // Create Wrapper
         CollectionResourceWrapper wrapper = createWrapper(resource, attributes);
         
@@ -76,7 +125,7 @@ public class CollectionResourceWrapperIT {
         Assert.assertEquals(Double.valueOf(100.0), wrapper.getAttributeValue("myGauge"));
         Assert.assertEquals(Double.valueOf(100.0), wrapper.getAttributeValue("myGauge"));
         
-        EasyMock.verify(agent);*/
+        EasyMock.verify(agent);
     }
     
     @Test(expected=IllegalArgumentException.class)
@@ -101,10 +150,10 @@ public class CollectionResourceWrapperIT {
 
     @Test
     public void testGetCounterValue() throws Exception {
-        /*       // Create Resource
+        // Create Resource
         SnmpCollectionAgent agent = createCollectionAgent();
         SnmpCollectionResource resource = createNodeResource(agent);
-        
+
         // Add Counter Attribute
         String attributeName = "myCounter";
         String attributeId = "node[1].resourceType[node].instance[null].metric[" + attributeName + "]";
@@ -117,18 +166,18 @@ public class CollectionResourceWrapperIT {
         
         // Get counter value - first time
         CollectionResourceWrapper wrapper = createWrapper(resource, attributes, baseDate);
-        
+
         Assert.assertFalse(CollectionResourceWrapper.s_cache.containsKey(attributeId));
         Assert.assertEquals(Double.valueOf(Double.NaN), wrapper.getAttributeValue(attributeName)); // Last value is null
         Assert.assertEquals(Double.valueOf(Double.NaN), wrapper.getAttributeValue(attributeName)); // Last value is null
         Assert.assertEquals(Double.valueOf(1000.0), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
-        
+
         // Increase counter
         attribute = addAttributeToCollectionResource(resource, attributeName, AttributeType.COUNTER, "0", "2500");
         attributes.put(attribute.getName(), attribute);
         //Next wrapper is told the data was collected 5 minutes in the future (300 seconds)
         wrapper = createWrapper(resource, attributes, new Date(baseDate.getTime()+300000));
-              
+
         // Get counter value - second time
         // Last value is 1000.0, so 2500-1000/300 = 1500/300 =  5.
         Assert.assertEquals(Double.valueOf(1000.0), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
@@ -140,13 +189,13 @@ public class CollectionResourceWrapperIT {
         Assert.assertEquals(Double.valueOf(2500.0), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
         Assert.assertEquals(Double.valueOf(5.0), wrapper.getAttributeValue(attributeName));
         Assert.assertEquals(Double.valueOf(2500.0), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
-        
+
         // Increase counter
         attribute = addAttributeToCollectionResource(resource, attributeName, AttributeType.COUNTER, "0", "5500");
         attributes.put(attribute.getName(), attribute);
         //Next wrapper is told the data was collected 10 minutes in the future (600 seconds), or after the first collection
         wrapper = createWrapper(resource, attributes, new Date(baseDate.getTime()+600000));
-        
+
         // Get counter value - third time
         // Last value is 2500.0, so 5500-2500/300 = 3000/300 =  10;
         Assert.assertEquals(Double.valueOf(2500.0), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
@@ -155,7 +204,7 @@ public class CollectionResourceWrapperIT {
         Assert.assertEquals(Double.valueOf(10.0), wrapper.getAttributeValue(attributeName));
         Assert.assertEquals(Double.valueOf(5500.0), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
         Assert.assertEquals(Double.valueOf(10.0), wrapper.getAttributeValue(attributeName));
-        Assert.assertEquals(Double.valueOf(5500.0), CollectionResourceWrapper.s_cache.get(attributeId).getValue());*/
+        Assert.assertEquals(Double.valueOf(5500.0), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
     }
         
     
@@ -166,43 +215,43 @@ public class CollectionResourceWrapperIT {
       * was incorrectly calculated on the next succeeding cycle (taking the difference from the last successful 
       * collection and dividing by just a single collection interval.
       */
-	@Test
-	public void testGetCounterValueWithGap() throws Exception {
-		m_ignoreWarnings = true; // we get a warning on the first getAttributeValue()
+    @Test
+    public void testGetCounterValueWithGap() throws Exception {
+        m_ignoreWarnings = true; // we get a warning on the first getAttributeValue()
 
-        /*SnmpCollectionAgent agent = createCollectionAgent();
+        SnmpCollectionAgent agent = createCollectionAgent();
         SnmpCollectionResource resource = createNodeResource(agent);
-        
+
         // Add Counter Attribute
         String attributeName = "myCounter";
             String attributeId = "node[1].resourceType[node].instance[null].metric[" + attributeName + "]";
         Map<String, CollectionAttribute> attributes = new HashMap<String, CollectionAttribute>();
         SnmpAttribute attribute = addAttributeToCollectionResource(resource, attributeName, AttributeType.COUNTER, "0", "1000");
         attributes.put(attribute.getName(), attribute);
-        
+
         // We manipulate the Date objects passed to the
         // CollectionResourceWrapper to simulate various collection intervals
         Date baseDate = new Date();
-        
+
         // Get counter value - first time
         CollectionResourceWrapper wrapper = createWrapper(resource, attributes,
-        		baseDate);
-        
+                                                          baseDate);
+
         Assert.assertFalse(CollectionResourceWrapper.s_cache
-        		.containsKey(attributeId));
+                .containsKey(attributeId));
         Assert.assertEquals(Double.valueOf(Double.NaN),
-        		wrapper.getAttributeValue(attributeName)); // Last value is null
+                            wrapper.getAttributeValue(attributeName)); // Last value is null
         Assert.assertEquals(Double.valueOf(Double.NaN),
-        		wrapper.getAttributeValue(attributeName)); // Last value is null
+                            wrapper.getAttributeValue(attributeName)); // Last value is null
         Assert.assertEquals(Double.valueOf(1000.0),
-        		CollectionResourceWrapper.s_cache.get(attributeId).getValue());
-        
+                            CollectionResourceWrapper.s_cache.get(attributeId).getValue());
+
         // Increase counter
         attribute = addAttributeToCollectionResource(resource, attributeName, AttributeType.COUNTER, "0", "2500");
         attributes.put(attribute.getName(), attribute);
         //Next wrapper is told the data was collected 5 minutes in the future (300 seconds)
         wrapper = createWrapper(resource, attributes, new Date(baseDate.getTime()+300000));
-        
+
         // Get counter value - second time
         // Last value is 1000.0, so 2500-1000/300 = 1500/300 =  5.
         Assert.assertEquals(Double.valueOf(1000.0), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
@@ -212,7 +261,7 @@ public class CollectionResourceWrapperIT {
         //but that calling getAttributeValue doesn't re-calculate the rate inappropriately or update the static cache
         Assert.assertEquals(Double.valueOf(5.0), wrapper.getAttributeValue(attributeName));
         Assert.assertEquals(Double.valueOf(2500.0), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
-        
+
         // Now create a collection that is missing the counter value; we're
         // expecting null result and no cache updates
         attributes = new HashMap<String, CollectionAttribute>();
@@ -221,16 +270,16 @@ public class CollectionResourceWrapperIT {
         attributes.put(attribute.getName(), attribute);
         // Next collection is 10 minutes (600 seconds) after the first.
         wrapper = createWrapper(resource, attributes,
-        		new Date(baseDate.getTime() + 600000));
-        
+                                new Date(baseDate.getTime() + 600000));
+
         // No change, so we expect the cache to have (and continue to) remain
         // the same, and to get no attribute value out
         Assert.assertEquals(Double.valueOf(2500.0),
-        		CollectionResourceWrapper.s_cache.get(attributeId).getValue());
+                            CollectionResourceWrapper.s_cache.get(attributeId).getValue());
         Assert.assertNull(wrapper.getAttributeValue(attributeName)); 
         Assert.assertEquals(Double.valueOf(2500.0),
-        		CollectionResourceWrapper.s_cache.get(attributeId).getValue());
-        
+                            CollectionResourceWrapper.s_cache.get(attributeId).getValue());
+
         // Now if we collect successfully again, we expect the counter to be the
         // change divided by two collection cycles
         attributes = new HashMap<String, CollectionAttribute>();
@@ -240,36 +289,36 @@ public class CollectionResourceWrapperIT {
         
         // Next collection is 15 minutes (900 seconds) after the first.
         wrapper = createWrapper(resource, attributes,
-        		new Date(baseDate.getTime() + 900000));
-        
+                                new Date(baseDate.getTime() + 900000));
+
         // Get counter value - fourth time
         // Last value is 5500, but we've had two collection cycles, so
         // 7300-2500/600 = 4800/600 = 8
         Assert.assertEquals(Double.valueOf(2500.0),
-        		CollectionResourceWrapper.s_cache.get(attributeId).getValue());
+                            CollectionResourceWrapper.s_cache.get(attributeId).getValue());
         Assert.assertEquals(Double.valueOf(8.0), wrapper.getAttributeValue(attributeName));
         Assert.assertEquals(Double.valueOf(7300.0),
-        		CollectionResourceWrapper.s_cache.get(attributeId).getValue());
+                            CollectionResourceWrapper.s_cache.get(attributeId).getValue());
         Assert.assertEquals(Double.valueOf(8.0), wrapper.getAttributeValue(attributeName));
         Assert.assertEquals(Double.valueOf(7300.0),
-        		CollectionResourceWrapper.s_cache.get(attributeId).getValue());
+                            CollectionResourceWrapper.s_cache.get(attributeId).getValue());
         Assert.assertEquals(Double.valueOf(8.0), wrapper.getAttributeValue(attributeName));
         Assert.assertEquals(Double.valueOf(7300.0),
-        		CollectionResourceWrapper.s_cache.get(attributeId).getValue());
-        
-        EasyMock.verify(agent);*/
-	}
+                            CollectionResourceWrapper.s_cache.get(attributeId).getValue());
+
+        EasyMock.verify(agent);
+    }
 
     @Test
     public void testGetCounterValueWithWrap() throws Exception {
-        /* // Create Resource
+        // Create Resource
         SnmpCollectionAgent agent = createCollectionAgent();
         SnmpCollectionResource resource = createNodeResource(agent);
-        
+
         // We manipulate the Date objects passed to the
         // CollectionResourceWrapper to simulate various collection intervals
         Date baseDate = new Date();
-        
+
         // Add Counter Attribute
         String attributeName = "myCounter";
         String attributeId = "node[1].resourceType[node].instance[null].metric[" + attributeName + "]";
@@ -284,12 +333,12 @@ public class CollectionResourceWrapperIT {
         Assert.assertEquals(Double.valueOf(Double.NaN), wrapper.getAttributeValue(attributeName)); // Last value is null
         Assert.assertEquals(Double.valueOf(Double.NaN), wrapper.getAttributeValue(attributeName)); // Last value is null
         Assert.assertEquals(Double.valueOf(initialValue.doubleValue()), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
-        
+
         // Increase counter
         attribute = addAttributeToCollectionResource(resource, attributeName, AttributeType.COUNTER, "0", new BigInteger("40000"));
         attributes.put(attribute.getName(), attribute);
         wrapper = createWrapper(resource, attributes, new Date(baseDate.getTime() + 300000));
-        
+
         // Get counter value - second time (wrap)
         // last = MAX - 20000, new = 40000; then last - new = 60000, rate: 60000/300 = 200
         Assert.assertEquals(Double.valueOf(initialValue.doubleValue()), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
@@ -299,11 +348,10 @@ public class CollectionResourceWrapperIT {
         Assert.assertEquals(Double.valueOf(40000.0), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
         Assert.assertEquals(Double.valueOf(200.0), wrapper.getAttributeValue(attributeName));
         Assert.assertEquals(Double.valueOf(40000.0), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
-        
-        EasyMock.verify(agent);*/
+
+        EasyMock.verify(agent);
     }
     
-    /*
     @Test
     public void testInterfaceResource() throws Exception {
         // Set Defaults
@@ -324,10 +372,10 @@ public class CollectionResourceWrapperIT {
         MockDatabase db = new MockDatabase();
         db.populate(network);
         DataSourceFactory.setInstance(db);
-    
+
         // Create Mock Collection Agent
         SnmpCollectionAgent agent = createCollectionAgent();
-    
+
         // Create SnmpIfData
         OnmsNode node = new OnmsNode();
         node.setId(agent.getNodeId());
@@ -341,12 +389,12 @@ public class CollectionResourceWrapperIT {
         snmpIface.setIfSpeed(10000000l);
         snmpIface.setPhysAddr("001122334455");
         SnmpIfData ifData = new SnmpIfData(snmpIface);
-    
+
         // Creating IfResourceType
         MockDataCollectionConfig dataCollectionConfig = new MockDataCollectionConfig();        
         OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, Object>()), dataCollectionConfig, m_locationAwareSnmpClient);
         IfResourceType resourceType = new IfResourceType(agent, collection);
-    
+
         // Creating Resource
         SnmpCollectionResource resource = new IfInfo(resourceType, agent, ifData);
         SnmpAttribute attribute = addAttributeToCollectionResource(resource, "ifInOctets", AttributeType.COUNTER, "ifIndex", "5000");
@@ -355,7 +403,7 @@ public class CollectionResourceWrapperIT {
         
         // Create Wrapper
         CollectionResourceWrapper wrapper = createWrapper(resource, attributes);
-    
+
         // Validations
         Assert.assertEquals(node.getId().intValue(), wrapper.getNodeId());
         Assert.assertEquals("127.0.0.1", wrapper.getHostAddress()); // Should be the address of the SNMP Agent (Bug 3808)
@@ -371,7 +419,7 @@ public class CollectionResourceWrapperIT {
         Assert.assertEquals("eth0-001122334455", wrapper.getInstanceLabel());
         Assert.assertEquals("nodeSource[JUnit:T001].interfaceSnmp[eth0-001122334455]", wrapper.getResourceId().toString());
     }
-    
+
     @Test
     public void testGenericResource() throws Exception {
         SnmpCollectionAgent agent = createCollectionAgent();
@@ -388,64 +436,64 @@ public class CollectionResourceWrapperIT {
         PersistenceSelectorStrategy pstrategy = new PersistenceSelectorStrategy();
         pstrategy.setClazz("org.opennms.netmgt.collection.support.PersistAllSelectorStrategy");
         rt.setPersistenceSelectorStrategy(pstrategy);
-    
+
         GenericIndexResourceType resourceType = new GenericIndexResourceType(agent, collection, rt);
-    
+
         SnmpCollectionResource resource = new GenericIndexResource(resourceType, resourceType.getName(), new SnmpInstId(100));
         SnmpAttribute used = addAttributeToCollectionResource(resource, "hrStorageUsed", AttributeType.GAUGE, "hrStorageIndex", "5000");
         SnmpAttribute label = addAttributeToCollectionResource(resource, "hrStorageLabel", AttributeType.STRING, "hrStorageIndex", "/opt");
         Map<String, CollectionAttribute> attributes = new HashMap<String, CollectionAttribute>();
         attributes.put(used.getName(), used);
         attributes.put(label.getName(), label);
-    
+
         CollectionResourceWrapper wrapper = createWrapper(resource, attributes);
         Assert.assertEquals("opt", wrapper.getInstanceLabel());
     }
-    */
+
     @Test
     public void testNumericFields() throws Exception {
-        // SnmpCollectionAgent agent = createCollectionAgent();
-        // MockDataCollectionConfig dataCollectionConfig = new MockDataCollectionConfig();
-        // OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, Object>()), dataCollectionConfig, m_locationAwareSnmpClient);
-        // ResourceType rt = new ResourceType();
-        // rt.setName("dskIndex");
-        // rt.setLabel("Disk Table Index (UCD-SNMP MIB)");
-        // StorageStrategy strategy = new StorageStrategy();
-        // strategy.setClazz("org.opennms.netmgt.dao.support.SiblingColumnStorageStrategy");
-        // strategy.addParameter(new Parameter("sibling-column-name", "ns-dskPath"));
-        // strategy.addParameter(new Parameter("replace-first", "s/^-$/_root_fs/"));
-        // strategy.addParameter(new Parameter("replace-all", "s/^-//"));
-        // strategy.addParameter(new Parameter("replace-all", "s/\\s//"));
-        // strategy.addParameter(new Parameter("replace-all","s/:\\\\.*//"));
-        // rt.setStorageStrategy(strategy);
-        // PersistenceSelectorStrategy pstrategy = new PersistenceSelectorStrategy();
-        // pstrategy.setClazz("org.opennms.netmgt.collection.support.PersistAllSelectorStrategy");
-        // rt.setPersistenceSelectorStrategy(pstrategy);
-        //
-        // GenericIndexResourceType resourceType = new GenericIndexResourceType(agent, collection, rt);
-        //
-        // SnmpCollectionResource resource = new GenericIndexResource(resourceType, resourceType.getName(), new SnmpInstId(100));
-        // SnmpAttribute total = addAttributeToCollectionResource(resource, "ns-dskTotal", AttributeType.GAUGE, "dskIndex", "10000");
-        // SnmpAttribute used = addAttributeToCollectionResource(resource, "ns-dskUsed", AttributeType.GAUGE, "dskIndex", "5000");
-        // SnmpAttribute label = addAttributeToCollectionResource(resource, "ns-dskPath", AttributeType.STRING, "dskIndex", "/opt");
-        // Map<String, CollectionAttribute> attributes = new HashMap<String, CollectionAttribute>();
-        // attributes.put(used.getName(), used);
-        // attributes.put(total.getName(), total);
-        // attributes.put(label.getName(), label);
-        //
-        // CollectionResourceWrapper wrapper = createWrapper(resource, attributes);
-        // Assert.assertEquals("opt", wrapper.getInstanceLabel());
-        // Assert.assertEquals(new Double("10000.0"), wrapper.getAttributeValue(total.getName()));
-        // Assert.assertEquals("10000.0", wrapper.getFieldValue(total.getName()));
+        SnmpCollectionAgent agent = createCollectionAgent();
+        MockDataCollectionConfig dataCollectionConfig = new MockDataCollectionConfig();
+        OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, Object>()), dataCollectionConfig, m_locationAwareSnmpClient);
+        ResourceType rt = new ResourceType();
+        rt.setName("dskIndex");
+        rt.setLabel("Disk Table Index (UCD-SNMP MIB)");
+        StorageStrategy strategy = new StorageStrategy();
+        strategy.setClazz("org.opennms.netmgt.dao.support.SiblingColumnStorageStrategy");
+        strategy.addParameter(new Parameter("sibling-column-name", "ns-dskPath"));
+        strategy.addParameter(new Parameter("replace-first", "s/^-$/_root_fs/"));
+        strategy.addParameter(new Parameter("replace-all", "s/^-//"));
+        strategy.addParameter(new Parameter("replace-all", "s/\\s//"));
+        strategy.addParameter(new Parameter("replace-all", "s/:\\\\.*//"));
+        rt.setStorageStrategy(strategy);
+        PersistenceSelectorStrategy pstrategy = new PersistenceSelectorStrategy();
+        pstrategy.setClazz("org.opennms.netmgt.collection.support.PersistAllSelectorStrategy");
+        rt.setPersistenceSelectorStrategy(pstrategy);
+
+        GenericIndexResourceType resourceType = new GenericIndexResourceType(agent, collection, rt);
+
+        SnmpCollectionResource resource = new GenericIndexResource(resourceType, resourceType.getName(), new SnmpInstId(100));
+        SnmpAttribute total = addAttributeToCollectionResource(resource, "ns-dskTotal", AttributeType.GAUGE, "dskIndex", "10000");
+        SnmpAttribute used = addAttributeToCollectionResource(resource, "ns-dskUsed", AttributeType.GAUGE, "dskIndex", "5000");
+        SnmpAttribute label = addAttributeToCollectionResource(resource, "ns-dskPath", AttributeType.STRING, "dskIndex", "/opt");
+        Map<String, CollectionAttribute> attributes = new HashMap<String, CollectionAttribute>();
+        attributes.put(used.getName(), used);
+        attributes.put(total.getName(), total);
+        attributes.put(label.getName(), label);
+
+        CollectionResourceWrapper wrapper = createWrapper(resource, attributes);
+        Assert.assertEquals("opt", wrapper.getInstanceLabel());
+        Assert.assertEquals(new Double("10000.0"), wrapper.getAttributeValue(total.getName()));
+        Assert.assertEquals("10000.0", wrapper.getFieldValue(total.getName()));
     }
-    /*
+
     @Test
     public void testCounterReset_NMS7106() throws Exception {
         // Create Resource
         SnmpCollectionAgent agent = createCollectionAgent();
         SnmpCollectionResource resource = createNodeResource(agent);
         Date baseDate = new Date();
-    
+
         // Add Counter Attribute
         System.err.println("------------------------");
         String attributeName = "myCounter";
@@ -454,7 +502,7 @@ public class CollectionResourceWrapperIT {
         BigInteger initialValue = new BigInteger("300");
         SnmpAttribute attribute = addAttributeToCollectionResource(resource, attributeName, AttributeType.COUNTER, "0", initialValue);
         attributes.put(attribute.getName(), attribute);
-    
+
         // Get counter value - first time
         CollectionResourceWrapper wrapper = createWrapper(resource, attributes, baseDate);
         Assert.assertFalse(CollectionResourceWrapper.s_cache.containsKey(attributeId));
@@ -462,7 +510,7 @@ public class CollectionResourceWrapperIT {
         Assert.assertEquals(Double.valueOf(Double.NaN), wrapper.getAttributeValue(attributeName)); // Last value is null
         Assert.assertEquals(Double.valueOf(initialValue.doubleValue()), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
         Assert.assertTrue(wrapper.getAttributeValue(attributeName).isNaN());
-    
+
         // Increase counter
         attribute = addAttributeToCollectionResource(resource, attributeName, AttributeType.COUNTER, "0", new BigInteger("600"));
         attributes.put(attribute.getName(), attribute);
@@ -470,7 +518,7 @@ public class CollectionResourceWrapperIT {
         Assert.assertFalse(CollectionResourceWrapper.s_cache.get(attributeId).getValue().isNaN());
         Assert.assertEquals(Double.valueOf(300.0), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
         Assert.assertEquals(Double.valueOf(1.0), wrapper.getAttributeValue(attributeName)); // 600 - 300 / 300 = 1.0
-    
+
         // Increase counter again
         attribute = addAttributeToCollectionResource(resource, attributeName, AttributeType.COUNTER, "0", new BigInteger("900"));
         attributes.put(attribute.getName(), attribute);
@@ -478,23 +526,23 @@ public class CollectionResourceWrapperIT {
         Assert.assertFalse(CollectionResourceWrapper.s_cache.get(attributeId).getValue().isNaN());
         Assert.assertEquals(Double.valueOf(600.0), CollectionResourceWrapper.s_cache.get(attributeId).getValue());
         Assert.assertEquals(Double.valueOf(1.0), wrapper.getAttributeValue(attributeName)); // 900 - 600 / 300 = 1.0
-    
+
         // Emulate a sysUpTime restart
         attribute = addAttributeToCollectionResource(resource, attributeName, AttributeType.COUNTER, "0", new BigInteger("60"));
         attributes.put(attribute.getName(), attribute);
         wrapper = createWrapper(resource, attributes, new Date(baseDate.getTime() + 900000));
         wrapper.setCounterReset(true);
         Assert.assertTrue(wrapper.getAttributeValue(attributeName).isNaN());
-    
+
         // Increase counter again
         attribute = addAttributeToCollectionResource(resource, attributeName, AttributeType.COUNTER, "0", new BigInteger("120"));
         attributes.put(attribute.getName(), attribute);
         wrapper = createWrapper(resource, attributes, new Date(baseDate.getTime() + 1200000));
         Assert.assertEquals(Double.valueOf(0.2), wrapper.getAttributeValue(attributeName)); // 120 - 60 / 300 = 0.2
-    
+
         EasyMock.verify(agent);
     }
-    
+
     private SnmpCollectionResource createNodeResource(SnmpCollectionAgent agent) {
         MockDataCollectionConfig dataCollectionConfig = new MockDataCollectionConfig();        
         OnmsSnmpCollection collection = new OnmsSnmpCollection(agent, new ServiceParameters(new HashMap<String, Object>()), dataCollectionConfig, m_locationAwareSnmpClient);
@@ -505,13 +553,13 @@ public class CollectionResourceWrapperIT {
     // Wrapper interval value for counter rates calculation should be expressed in seconds.
     private CollectionResourceWrapper createWrapper(SnmpCollectionResource resource, Map<String, CollectionAttribute> attributes, Date timestamp) {
         CollectionResourceWrapper wrapper = new CollectionResourceWrapper(timestamp, 1, "127.0.0.1", "SNMP", getRepository(), resource, attributes, getResourceStorageDao());
-        return wrapper;    	
+        return wrapper;
     }
     
     private CollectionResourceWrapper createWrapper(SnmpCollectionResource resource, Map<String, CollectionAttribute> attributes) {
-    	return this.createWrapper(resource, attributes, new Date());
+        return this.createWrapper(resource, attributes, new Date());
     }
-    
+
     private SnmpCollectionAgent createCollectionAgent() {
         SnmpCollectionAgent agent = EasyMock.createMock(SnmpCollectionAgent.class);
         EasyMock.expect(agent.getNodeId()).andReturn(1).anyTimes();
@@ -523,11 +571,11 @@ public class CollectionResourceWrapperIT {
         EasyMock.replay(agent);
         return agent;
     }
-    
+
     private SnmpAttribute addAttributeToCollectionResource(SnmpCollectionResource resource, String attributeName, AttributeType attributeType, String attributeInstance, String value) {
         MibObject object = createMibObject(attributeType, attributeName, attributeInstance);
         SnmpAttributeType objectType = null;
-    
+
         SnmpValue snmpValue = null;
         if (AttributeType.STRING.equals(attributeType)) {
             objectType = new SnmpAttributeType(resource.getResourceType(), "default", object, new AttributeGroupType("mibGroup", AttributeGroupType.IF_TYPE_IGNORE)) {
@@ -535,7 +583,7 @@ public class CollectionResourceWrapperIT {
                 public AttributeType getType() {
                     return AttributeType.STRING;
                 }
-    
+
                 @Override
                 public void storeAttribute(CollectionAttribute attribute, Persister persister) {
                     persister.persistStringAttribute(attribute);
@@ -550,7 +598,7 @@ public class CollectionResourceWrapperIT {
         resource.setAttributeValue(objectType, snmpValue);
         return new SnmpAttribute(resource, objectType, snmpValue);
     }
-    
+
     private SnmpAttribute addAttributeToCollectionResource(SnmpCollectionResource resource, String attributeName, AttributeType attributeType, String attributeInstance, BigInteger value) {
         MibObject object = createMibObject(attributeType, attributeName, attributeInstance);
         SnmpAttributeType objectType = new NumericAttributeType(resource.getResourceType(), "default", object, new AttributeGroupType("mibGroup", AttributeGroupType.IF_TYPE_IGNORE));
@@ -558,7 +606,7 @@ public class CollectionResourceWrapperIT {
         resource.setAttributeValue(objectType, snmpValue);
         return new SnmpAttribute(resource, objectType, snmpValue);
     }
-    
+
     private MibObject createMibObject(AttributeType type, String alias, String instance) {
         MibObject mibObject = new MibObject();
         mibObject.setOid(".1.1.1.1");
@@ -569,17 +617,16 @@ public class CollectionResourceWrapperIT {
         mibObject.setMinval(null);
         return mibObject;
     }
-    
+
     private RrdRepository getRepository() {
         RrdRepository repo = new RrdRepository();
         repo.setRrdBaseDir(tempFolder.getRoot());
-        return repo;		
+        return repo;
     }
-    
+
     private ResourceStorageDao getResourceStorageDao() {
         FilesystemResourceStorageDao resourceStorageDao = new FilesystemResourceStorageDao();
         resourceStorageDao.setRrdDirectory(tempFolder.getRoot());
         return resourceStorageDao;
     }
-    
-    */}
+}
