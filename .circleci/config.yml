@@ -171,7 +171,8 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/
-      - setup_remote_docker
+      - setup_remote_docker:
+          docker_layer_caching: true
       - bash-alpine
       - run:
           name: Fetch RPM artifacts and build Horizon container image

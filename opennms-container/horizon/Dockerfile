@@ -6,13 +6,32 @@ FROM ${BASE_IMAGE}:${BASE_IMAGE_VERSION}
 ARG VERSION=${BASE_IMAGE_VERSION}
 ARG BUILD_DATE="1970-01-01T00:00:00+0000"
 
-ARG PACKAGES
+ARG PACKAGES="R-Core"
+ARG CONFD_VERSION="0.16.0"
+ARG CONFD_URL="https://github.com/kelseyhightower/confd/releases/download/v${CONFD_VERSION}/confd-${CONFD_VERSION}-linux-amd64"
 
+ARG REPO_KEY_URL="https://yum.opennms.org/OPENNMS-GPG-KEY"
+ARG REPO_RPM="https://yum.opennms.org/repofiles/opennms-repo-stable-rhel7.noarch.rpm"
+
+ARG PACKAGES
 ARG ONMS_PACKAGES="opennms-core opennms-webapp-jetty opennms-webapp-hawtio"
 
 COPY ./rpms /tmp/rpms
 
 SHELL ["/bin/bash", "-c"]
+
+# Collect generic steps in a layer for caching
+RUN setcap cap_net_raw+ep ${JAVA_HOME}/bin/java && \
+    echo ${JAVA_HOME}/lib/jli > /etc/ld.so.conf.d/java-latest.conf && \
+    ldconfig && \
+    curl -L ${CONFD_URL} -o /usr/bin/confd && \
+    chmod +x /usr/bin/confd && \
+    yum -y install epel-release && \
+    rpm --import "${REPO_KEY_URL}" && \
+    yum -y install "${REPO_RPM}" && \
+    yum -y install ${PACKAGES} && \
+    yum clean all -y && \
+    rm -rf /var/cache/yum
 
 # Install repositories, system and OpenNMS packages and do some cleanup
 RUN if [[ -n ${PACKAGES} ]]; then yum -y install ${PACKAGES}; fi && \
@@ -39,7 +58,8 @@ LABEL maintainer="The OpenNMS Group" \
       name="Horizon" \
       version="${VERSION}" \
       build.date="${BUILD_DATE}" \
-      vendor="OpenNMS Community"
+      vendor="OpenNMS Community" \
+      io.confd.version="${CONFD_VERSION}"
 
 WORKDIR /opt/opennms
 

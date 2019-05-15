@@ -3,8 +3,8 @@
 # shellcheck disable=SC2034
 
 # Base Image Dependency
-BASE_IMAGE="opennms/base-horizon"
-BASE_IMAGE_VERSION="jdk11-1.0.1-cb.1242"
+BASE_IMAGE="opennms/openjdk"
+BASE_IMAGE_VERSION="11.0.3.7-b1"
 BUILD_DATE="$(date -u +"%Y-%m-%dT%H:%M:%S%z")"
 
 # Horizon Image versioning
@@ -22,6 +22,24 @@ IMAGE_VERSION=("${VERSION}-${BUILD_NUMBER}"
 if [ -n "${CIRCLE_BUILD_NUM}" ]; then
   IMAGE_VERSION+=("${VERSION}-${BUILD_NUMBER}.${CIRCLE_BUILD_NUM}")
 fi
+
+CONFD_VERSION="0.16.0"
+CONFD_URL="https://github.com/kelseyhightower/confd/releases/download/v${CONFD_VERSION}/confd-${CONFD_VERSION}-linux-amd64"
+
+REPO_HOST="yum.opennms.org"
+REPO_RELEASE="stable"
+REPO_RPM="https://${REPO_HOST}/repofiles/opennms-repo-${REPO_RELEASE}-rhel7.noarch.rpm"
+REPO_KEY_URL="https://${REPO_HOST}/OPENNMS-GPG-KEY"
+
+# OpenNMS Horizon dependencies
+PACKAGES="rrdtool
+          jrrd2
+          jicmp
+          jicmp6
+          R-core
+          rsync
+          perl-XML-Twig
+          perl-libwww-perl"
 
 #
 # If you want to install packages from the official repository, add your packages here.

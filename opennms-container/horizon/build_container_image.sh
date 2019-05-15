@@ -17,6 +17,10 @@ docker build -t horizon \
   --build-arg BASE_IMAGE="${BASE_IMAGE}" \
   --build-arg BASE_IMAGE_VERSION="${BASE_IMAGE_VERSION}" \
   --build-arg VERSION="${VERSION}" \
+  --build-arg CONFD_VERSION="${CONFD_VERSION}" \
+  --build-arg CONFD_URL="${CONFD_URL}" \
+  --build-arg REPO_RPM="${REPO_RPM}" \
+  --build-arg REPO_KEY_URL="${REPO_KEY_URL}" \
   --build-arg PACKAGES="${PACKAGES}" \
   --build-arg ONMS_PACKAGES="${ONMS_PACKAGES}" \
   .
