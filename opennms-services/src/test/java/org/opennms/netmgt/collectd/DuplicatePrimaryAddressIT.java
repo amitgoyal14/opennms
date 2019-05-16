@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2007-2012 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2012 The OpenNMS Group, Inc.
+ * Copyright (C) 2019 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2019 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -65,13 +65,13 @@ import org.opennms.netmgt.events.api.EventIpcManagerFactory;
 import org.opennms.netmgt.filter.FilterDaoFactory;
 import org.opennms.netmgt.filter.api.FilterDao;
 import org.opennms.netmgt.mock.MockPersisterFactory;
+import org.opennms.netmgt.mock.MockThresholdingFactory;
 import org.opennms.netmgt.model.NetworkBuilder;
 import org.opennms.netmgt.model.OnmsIpInterface;
 import org.opennms.netmgt.model.OnmsNode;
 import org.opennms.netmgt.model.OnmsServiceType;
 import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.threshd.ThresholdingFactory;
-import org.opennms.netmgt.threshd.ThresholdingVisitor;
 import org.opennms.test.mock.EasyMockUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -199,9 +199,7 @@ public class DuplicatePrimaryAddressIT {
 
         m_ifaceDao = m_mockUtils.createMock(IpInterfaceDao.class);
         m_nodeDao = m_mockUtils.createMock(NodeDao.class);
-        m_thresholdingFactory = m_mockUtils.createMock(ThresholdingFactory.class);
-        ThresholdingVisitor mockThresholdingVisitor = m_mockUtils.createMock(ThresholdingVisitor.class);
-        EasyMock.expect(m_thresholdingFactory.createThresholder()).andReturn(mockThresholdingVisitor);
+        m_thresholdingFactory = new MockThresholdingFactory();
 
         m_collectd = new Collectd() {
             @Override
