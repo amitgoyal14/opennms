@@ -28,13 +28,18 @@
 
 package org.opennms.netmgt.mock;
 
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
 import org.opennms.netmgt.collection.api.AttributeGroup;
 import org.opennms.netmgt.collection.api.CollectionAttribute;
 import org.opennms.netmgt.collection.api.CollectionResource;
 import org.opennms.netmgt.collection.api.CollectionSet;
-import org.opennms.netmgt.collection.api.CollectionSetVisitor;
+import org.opennms.netmgt.threshd.ThresholdInitializationException;
+import org.opennms.netmgt.threshd.ThresholdingVisitor;
 
-public class MockThresholder implements CollectionSetVisitor {
+public class MockThresholder implements ThresholdingVisitor {
 
     @Override
     public void visitCollectionSet(CollectionSet set) {
@@ -66,5 +71,38 @@ public class MockThresholder implements CollectionSetVisitor {
 
     @Override
     public void completeCollectionSet(CollectionSet set) {
+    }
+
+    @Override
+    public void setCounterReset(boolean counterReset) {
+    }
+
+    @Override
+    public boolean hasThresholds() {
+        return false;
+    }
+
+    @Override
+    public List<String> getScheduledOutages() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void reload() {
+        // no-op
+    }
+
+    @Override
+    public void reloadScheduledOutages() throws ThresholdInitializationException {
+    }
+
+    @Override
+    public boolean isNodeInOutage() {
+        return false;
+    }
+
+    @Override
+    public Date getCollectionTimestamp() {
+        return null;
     }
 }

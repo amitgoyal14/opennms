@@ -68,7 +68,9 @@ import org.opennms.netmgt.model.events.EventBuilder;
 import org.opennms.netmgt.rrd.RrdRepository;
 import org.opennms.netmgt.scheduler.ReadyRunnable;
 import org.opennms.netmgt.scheduler.Scheduler;
+import org.opennms.netmgt.threshd.ThresholdInitializationException;
 import org.opennms.netmgt.threshd.ThresholdingFactory;
+import org.opennms.netmgt.threshd.ThresholdingVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -139,6 +141,8 @@ class CollectableService implements ReadyRunnable {
 
     private final ResourceStorageDao m_resourceStorageDao;
 
+    private ThresholdingVisitor m_thresholdVisitor;
+
     /**
      * Constructs a new instance of a CollectableService object.
      *
@@ -175,6 +179,12 @@ class CollectableService implements ReadyRunnable {
 
         m_params = m_spec.getServiceParameters();
         m_repository=m_spec.getRrdRepository(m_params.getCollectionName());
+
+        try {
+            m_thresholdVisitor = m_thresholdingFactory.createThresholder(m_nodeId, getHostAddress(), m_spec.getServiceName(), m_repository, m_params, m_resourceStorageDao);
+        } catch (final ThresholdInitializationException e) {
+            throw new CollectionInitializationException("Failed to initialize thresholding visitor.", e);
+        }
     }
     
     /**
@@ -432,8 +442,14 @@ class CollectableService implements ReadyRunnable {
                         }
 
                         // Do thresholding
-                        CollectionSetVisitor thresholder = m_thresholdingFactory.createThresholder();
-                        result.visit(thresholder);
+                if (m_thresholdVisitor != null) {
+                    if (m_thresholdVisitor.isNodeInOutage()) {
+                        LOG.info("run: the threshold processing will be skipped because the node {} is on a scheduled outage.", m_nodeId);
+                    } else if (m_thresholdVisitor.hasThresholds()) {
+                        m_thresholdVisitor.setCounterReset(result.ignorePersist()); // Required to reinitialize the counters.
+                        result.visit(m_thresholdVisitor);
+                    }
+                }
                         
                         if (!CollectionStatus.SUCCEEDED.equals(result.getStatus())) {
                             throw new CollectionFailed(result.getStatus());

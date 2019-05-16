@@ -596,11 +596,11 @@ public class ThresholdingVisitorIT {
         List<ThresholdingVisitor> visitors = new ArrayList<>();
         for (int i=1; i<=5; i++) {
             String ipAddress = baseIpAddress + i;
-            ThresholdingVisitor visitor = ThresholdingVisitor.create(i, ipAddress, "SNMP", getRepository(), svcParams, m_resourceStorageDao);
+            ThresholdingVisitor visitor = ThresholdingVisitorImpl.create(i, ipAddress, "SNMP", getRepository(), svcParams, m_resourceStorageDao);
             assertNotNull(visitor);
             visitors.add(visitor);
             if (i == 5) {
-                ThresholdingVisitor httpVisitor = ThresholdingVisitor.create(i, ipAddress, "HTTP", getRepository(), svcParams, m_resourceStorageDao);
+                ThresholdingVisitor httpVisitor = ThresholdingVisitorImpl.create(i, ipAddress, "HTTP", getRepository(), svcParams, m_resourceStorageDao);
                 assertNotNull(httpVisitor);
                 visitors.add(httpVisitor);
             }
@@ -610,11 +610,11 @@ public class ThresholdingVisitorIT {
         // Check Visitors
         for (int i=0; i<2; i++) { // Nodes n1 and n2 has thresholds defined on one threshold group.
             assertTrue(visitors.get(i).hasThresholds());
-            assertEquals(1, visitors.get(i).getThresholdGroups().size());
+            assertEquals(1, ((ThresholdingVisitorImpl) visitors.get(i)).getThresholdGroups().size());
         }
         for (int i=2; i<6; i++) { // Nodes n3, n4 and n5 should not have thresholds defined.
             assertFalse(visitors.get(i).hasThresholds());
-            assertEquals(0, visitors.get(i).getThresholdGroups().size());
+            assertEquals(0, ((ThresholdingVisitorImpl) visitors.get(i)).getThresholdGroups().size());
         }
 
         // Re-Initialize Factories
@@ -630,9 +630,9 @@ public class ThresholdingVisitorIT {
         // Check Visitors
         for (int i=0; i<6; i++) {
             assertTrue(visitors.get(i).hasThresholds());
-            assertEquals(1, visitors.get(i).getThresholdGroups().size());
+            assertEquals(1, ((ThresholdingVisitorImpl) visitors.get(i)).getThresholdGroups().size());
             if (i == 5) {
-                assertEquals("web-services", visitors.get(i).getThresholdGroups().get(0).getName());
+                assertEquals("web-services", ((ThresholdingVisitorImpl) visitors.get(i)).getThresholdGroups().get(0).getName());
             }
         }
     }
@@ -1008,7 +1008,7 @@ public class ThresholdingVisitorIT {
 
         // Validating Thresholding Set
         ThresholdingVisitor visitor = createVisitor();
-        assertEquals(5, visitor.getThresholdGroups().size());
+        assertEquals(5, ((ThresholdingVisitorImpl) visitor).getThresholdGroups().size());
     }
 
     /*
@@ -1192,9 +1192,9 @@ public class ThresholdingVisitorIT {
         for (int i=1; i<=numOfNodes; i++) {
             System.err.println("----------------------------------------------------------------------------------- visitor #" + i);
             String ipAddress = baseIpAddress + i;
-            ThresholdingVisitor visitor = ThresholdingVisitor.create(1, ipAddress, "SNMP", getRepository(), svcParams, m_resourceStorageDao);
+            ThresholdingVisitor visitor = ThresholdingVisitorImpl.create(1, ipAddress, "SNMP", getRepository(), svcParams, m_resourceStorageDao);
             assertNotNull(visitor);
-            assertEquals(4, visitor.getThresholdGroups().size()); // mib2, cisco, ciscoIPRA, ciscoNAS
+            assertEquals(4, ((ThresholdingVisitorImpl) visitor).getThresholdGroups().size()); // mib2, cisco, ciscoIPRA, ciscoNAS
         }
         System.err.println("----------------------------------------------------------------------------------- end");
     }
@@ -1628,26 +1628,14 @@ public class ThresholdingVisitorIT {
             m_resourceStorageDao.setStringAttribute(path, "wmiLDName", "I");
 
             // Build a collection set containing attributes for both resources
-            CollectionSet collectionSet = new CollectionSetBuilder(agent).withStringAttribute(volume16, "windows-os-wmi-LogicalDisk", "wmiLDName",
-                                                                                              "HarddiskVolume16").withNumericAttribute(volume16, "windows-os-wmi-LogicalDisk",
-                                                                                                                                       "wmiLDPctFreeMBytes", 1.0,
-                                                                                                                                       AttributeType.GAUGE).withNumericAttribute(volume16,
-                                                                                                                                                                                 "windows-os-wmi-LogicalDisk",
-                                                                                                                                                                                 "wmiLDPctFreeSpace",
-                                                                                                                                                                                 10,
-                                                                                                                                                                                 AttributeType.GAUGE).withStringAttribute(iDrive,
-                                                                                                                                                                                                                          "windows-os-wmi-LogicalDisk",
-                                                                                                                                                                                                                          "wmiLDName",
-                                                                                                                                                                                                                          "I").withNumericAttribute(iDrive,
-                                                                                                                                                                                                                                                    "windows-os-wmi-LogicalDisk",
-                                                                                                                                                                                                                                                    "wmiLDPctFreeMBytes",
-                                                                                                                                                                                                                                                    2668498.0,
-                                                                                                                                                                                                                                                    AttributeType.GAUGE).withNumericAttribute(iDrive,
-                                                                                                                                                                                                                                                                                              "windows-os-wmi-LogicalDisk",
-                                                                                                                                                                                                                                                                                              "wmiLDPctFreeSpace",
-                                                                                                                                                                                                                                                                                              10,
-                                                                                                                                                                                                                                                                                              AttributeType.GAUGE).build();
-
+            CollectionSet collectionSet = new CollectionSetBuilder(agent)
+                    .withStringAttribute(volume16, "windows-os-wmi-LogicalDisk", "wmiLDName", "HarddiskVolume16")
+                    .withNumericAttribute(volume16, "windows-os-wmi-LogicalDisk", "wmiLDPctFreeMBytes", 1.0, AttributeType.GAUGE)
+                    .withNumericAttribute(volume16, "windows-os-wmi-LogicalDisk", "wmiLDPctFreeSpace",10, AttributeType.GAUGE)
+                    .withStringAttribute(iDrive, "windows-os-wmi-LogicalDisk", "wmiLDName", "I")
+                    .withNumericAttribute(iDrive,"windows-os-wmi-LogicalDisk", "wmiLDPctFreeMBytes", 2668498.0, AttributeType.GAUGE)
+                    .withNumericAttribute(iDrive, "windows-os-wmi-LogicalDisk", "wmiLDPctFreeSpace", 10, AttributeType.GAUGE)
+                    .build();
             collectionSet.visit(visitor);
         }
 
@@ -1663,7 +1651,7 @@ public class ThresholdingVisitorIT {
 
     private ThresholdingVisitor createVisitor(Map<String, Object> params) throws ThresholdInitializationException {
         ServiceParameters svcParams = new ServiceParameters(params);
-        ThresholdingVisitor visitor = ThresholdingVisitor.create(1, "127.0.0.1", "SNMP", getRepository(), svcParams, m_resourceStorageDao);
+        ThresholdingVisitor visitor = ThresholdingVisitorImpl.create(1, "127.0.0.1", "SNMP", getRepository(), svcParams, m_resourceStorageDao);
         assertNotNull(visitor);
         return visitor;
     }

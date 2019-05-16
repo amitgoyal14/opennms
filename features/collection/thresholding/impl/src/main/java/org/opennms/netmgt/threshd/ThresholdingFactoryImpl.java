@@ -28,27 +28,22 @@
 
 package org.opennms.netmgt.threshd;
 
-import org.opennms.netmgt.collection.api.CollectionSetVisitor;
 import org.opennms.netmgt.collection.api.ServiceParameters;
 import org.opennms.netmgt.dao.api.ResourceStorageDao;
 import org.opennms.netmgt.rrd.RrdRepository;
 
-/**
- * TEMP CLASS for API seam to Thresholding service.
- * This class will move to features/collection/thresholding/api
- */
 public class ThresholdingFactoryImpl implements ThresholdingFactory {
 
-    public CollectionSetVisitor createThresholder() {
+    public ThresholdingVisitor createThresholder() {
         // FIXME - pass through CollectorThresholdingSet
-        return new ThresholdingVisitor(null);
+        return new ThresholdingVisitorImpl(null);
     }
 
     @Override
-    public CollectionSetVisitor createThresholder(int nodeId, String hostAddress, String serviceName, RrdRepository repo, ServiceParameters svcParams,
+    public ThresholdingVisitor createThresholder(int nodeId, String hostAddress, String serviceName, RrdRepository repo, ServiceParameters svcParams,
             ResourceStorageDao resourceStorageDao)
             throws ThresholdInitializationException {
-        return ThresholdingVisitor.create(nodeId, hostAddress, serviceName, repo, svcParams, resourceStorageDao);
+        return ThresholdingVisitorImpl.create(nodeId, hostAddress, serviceName, repo, svcParams, resourceStorageDao);
     }
 
 }

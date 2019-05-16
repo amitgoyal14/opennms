@@ -33,6 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.opennms.netmgt.collectd.AliasedResource;
 import org.opennms.netmgt.collection.api.CollectionAttribute;
 import org.opennms.netmgt.collection.api.CollectionResource;
 import org.opennms.netmgt.collection.api.ServiceParameters;
@@ -93,8 +94,8 @@ public class CollectorThresholdingSet extends ThresholdingSetImpl {
         CollectionResource resource = attribute.getResource();
         if (!isCollectionEnabled(attribute.getResource()))
             return false;
-        // if (resource instanceof AliasedResource && !storeByIfAlias)
-        // return false;
+        if (resource instanceof AliasedResource && !storeByIfAlias)
+            return false;
         return hasThresholds(resource.getResourceTypeName(), attribute.getName());
     }
 

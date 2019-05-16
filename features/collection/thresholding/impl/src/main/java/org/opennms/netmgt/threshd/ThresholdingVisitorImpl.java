@@ -64,7 +64,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:craig@opennms.org">Craig Miskell</a>
  * @version $Id: $
  */
-public class ThresholdingVisitor extends AbstractCollectionSetVisitor {
+public class ThresholdingVisitorImpl extends AbstractCollectionSetVisitor implements ThresholdingVisitor {
 
     private static final Logger LOG = LoggerFactory.getLogger(ThresholdingVisitor.class);
 
@@ -105,7 +105,7 @@ public class ThresholdingVisitor extends AbstractCollectionSetVisitor {
             LOG.warn("create: the ipaddress/service {}/{} on node {} has no configured thresholds.", hostAddress, serviceName, nodeId);
         }
 
-        return new ThresholdingVisitor(thresholdingSet);
+        return new ThresholdingVisitorImpl(thresholdingSet);
     }
 
     /**
@@ -113,7 +113,7 @@ public class ThresholdingVisitor extends AbstractCollectionSetVisitor {
      *
      * @param thresholdingSet a {@link org.opennms.netmgt.threshd.CollectorThresholdingSet} object.
      */
-    protected ThresholdingVisitor(CollectorThresholdingSet thresholdingSet) {
+    protected ThresholdingVisitorImpl(CollectorThresholdingSet thresholdingSet) {
         m_thresholdingSet = thresholdingSet;
         m_collectionTimestamp = new Date();
     }
@@ -138,7 +138,7 @@ public class ThresholdingVisitor extends AbstractCollectionSetVisitor {
     /**
      * Get a list of scheduled outages (for JUnit only at this time).
      */
-    List<String> getScheduledOutages() {
+    public List<String> getScheduledOutages() {
         return Collections.unmodifiableList(m_thresholdingSet.m_scheduledOutages);
     }
 

@@ -48,7 +48,6 @@ import org.mockito.Mockito;
 import org.opennms.core.rpc.api.RequestTimedOutException;
 import org.opennms.core.test.OpenNMSJUnit4ClassRunner;
 import org.opennms.core.utils.InetAddressUtils;
-import org.opennms.netmgt.collection.api.CollectionSetVisitor;
 import org.opennms.netmgt.collection.api.PersisterFactory;
 import org.opennms.netmgt.config.PollOutagesConfig;
 import org.opennms.netmgt.config.PollerConfig;
@@ -65,8 +64,8 @@ import org.opennms.netmgt.poller.LocationAwarePollerClient;
 import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.poller.PollerResponse;
 import org.opennms.netmgt.scheduler.Timer;
-import org.opennms.netmgt.threshd.CollectorThresholdingSet;
 import org.opennms.netmgt.threshd.ThresholdingFactory;
+import org.opennms.netmgt.threshd.ThresholdingVisitor;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
@@ -169,7 +168,7 @@ public class PollableServiceConfigIT {
         Timer timer = mock(Timer.class);
         PersisterFactory persisterFactory = mock(PersisterFactory.class);
         ThresholdingFactory thresholdingFactory = mock(ThresholdingFactory.class);
-        CollectionSetVisitor thresholdingVisitor = mock(CollectionSetVisitor.class);
+        ThresholdingVisitor thresholdingVisitor = mock(ThresholdingVisitor.class);
         when(thresholdingFactory.createThresholder()).thenReturn(thresholdingVisitor);
 
         final PollableServiceConfig psc = new PollableServiceConfig(pollableSvc, pollerConfig,
