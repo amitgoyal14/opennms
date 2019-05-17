@@ -96,9 +96,6 @@ public class PollableServiceConfigIT {
     @Autowired
     private IfLabel m_ifLabelDao;
 
-    @Autowired
-    private ResourceStorageDao m_resourceStorageDao;
-
     @Test
     public void testPollableServiceConfig() throws Exception {
         final FilterDao fd = mock(FilterDao.class);
@@ -121,7 +118,7 @@ public class PollableServiceConfigIT {
         final Package pkg = factory.getPackage("MapQuest");
         final Timer timer = mock(Timer.class);
         final PollableServiceConfig psc = new PollableServiceConfig(svc, factory, pollOutagesConfig, pkg, timer,
-                                                                    persisterFactory, m_thresholdingFactory, m_resourceStorageDao, 
+                                                                    persisterFactory, m_thresholdingFactory, resourceStorageDao,
                                                                     m_locationAwarePollerClient, m_ifLabelDao);
         PollStatus pollStatus = psc.poll();
         assertThat(pollStatus.getReason(), not(containsString("Unexpected exception")));
@@ -140,6 +137,8 @@ public class PollableServiceConfigIT {
         // Create a future that fails with a RequestTimedOutException
         CompletableFuture<PollerResponse> future = new CompletableFuture<>();
         future.completeExceptionally(new RequestTimedOutException(new Exception("Test")));
+
+        ResourceStorageDao resourceStorageDao = new FilesystemResourceStorageDao();
 
         // Now mock the client to always return the future we created above
         LocationAwarePollerClient client = mock(LocationAwarePollerClient.class, Mockito.RETURNS_DEEP_STUBS);
@@ -173,7 +172,7 @@ public class PollableServiceConfigIT {
 
         final PollableServiceConfig psc = new PollableServiceConfig(pollableSvc, pollerConfig,
                 pollOutagesConfig, pkg, timer, persisterFactory, thresholdingFactory, 
-                m_resourceStorageDao, client, m_ifLabelDao);
+                resourceStorageDao, client, m_ifLabelDao);
 
         // Trigger the poll
         PollStatus pollStatus = psc.poll();
