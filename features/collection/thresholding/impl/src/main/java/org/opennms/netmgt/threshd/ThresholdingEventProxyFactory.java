@@ -41,7 +41,7 @@ public class ThresholdingEventProxyFactory {
     private ThreadLocal<ThresholdingEventProxy> eventProxyRef = new ThreadLocal<ThresholdingEventProxy>() {
         @Override
         protected ThresholdingEventProxy initialValue() {
-            return new ThresholdingEventProxy();
+            return new ThresholdingEventProxyImpl();
         }
     };
 

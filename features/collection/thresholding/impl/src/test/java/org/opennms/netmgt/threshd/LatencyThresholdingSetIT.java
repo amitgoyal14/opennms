@@ -291,7 +291,7 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
         assertTrue(triggerEvents.size() == 1);
 
         addEvent(EventConstants.HIGH_THRESHOLD_EVENT_UEI, "127.0.0.1", "HTTP", 5, 100.0, 50.0, 200.0, IfLabel.NO_IFLABEL, "127.0.0.1[http]", "http", IfLabel.NO_IFLABEL, null, m_eventIpcManager.getEventAnticipator(), m_anticipatedEvents);
-        ThresholdingEventProxy proxy = new ThresholdingEventProxy();
+        ThresholdingEventProxy proxy = new ThresholdingEventProxyImpl();
         proxy.add(triggerEvents);
         proxy.sendAllEvents();
         verifyEvents(0);
@@ -326,7 +326,7 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
         List<Event> triggerEvents = thresholdingSet.applyThresholds("StrafePing", attributes, m_ifLabelDao);
         assertTrue(triggerEvents.size() == 1);
         addEvent(EventConstants.HIGH_THRESHOLD_EVENT_UEI, "127.0.0.1", "StrafePing", 1, 50.0, 25.0, 60.0, ifName, "127.0.0.1[StrafePing]", "loss", "eth0", null, m_eventIpcManager.getEventAnticipator(), m_anticipatedEvents);
-        ThresholdingEventProxy proxy = new ThresholdingEventProxy();
+        ThresholdingEventProxy proxy = new ThresholdingEventProxyImpl();
         proxy.add(triggerEvents);
         proxy.sendAllEvents();
         verifyEvents(0);
@@ -383,7 +383,7 @@ public class LatencyThresholdingSetIT implements TemporaryDatabaseAware<MockData
         // Validate Events
         addEvent(EventConstants.HIGH_THRESHOLD_EVENT_UEI, "127.0.0.1", "HTTP", 5, 100.0, 50.0, 200.0, ifName, "127.0.0.1[http]", "http", ifName, ifIndex.toString(), m_eventIpcManager.getEventAnticipator(), m_anticipatedEvents);
         addEvent(EventConstants.HIGH_THRESHOLD_REARM_EVENT_UEI, "127.0.0.1", "HTTP", 5, 100.0, 50.0, 40.0, ifName, "127.0.0.1[http]", "http", ifName, ifIndex.toString(), m_eventIpcManager.getEventAnticipator(), m_anticipatedEvents);
-        ThresholdingEventProxy proxy = new ThresholdingEventProxy();
+        ThresholdingEventProxy proxy = new ThresholdingEventProxyImpl();
         proxy.add(triggerEvents);
         proxy.add(rearmEvents);
         proxy.sendAllEvents();

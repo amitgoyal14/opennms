@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2019 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2019 The OpenNMS Group, Inc.
+ * Copyright (C) 2009-2014 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -28,24 +28,41 @@
 
 package org.opennms.netmgt.threshd;
 
-import org.opennms.netmgt.collection.api.ServiceParameters;
-import org.opennms.netmgt.dao.api.ResourceStorageDao;
-import org.opennms.netmgt.rrd.RrdRepository;
+import java.util.List;
+
+import org.opennms.netmgt.events.api.EventProxy;
+import org.opennms.netmgt.xml.event.Event;
 
 /**
- * Factory for Thresholding API types.
+ * <p>ThresholdingEventProxy class.</p>
+ *
+ * @author ranger
+ * @version $Id: $
  */
-public interface ThresholdingFactory {
+public interface ThresholdingEventProxy extends EventProxy {
+    
+    /**
+     * <p>add</p>
+     *
+     * @param event a {@link org.opennms.netmgt.xml.event.Event} object.
+     */
+    public void add(Event event);
 
-    @Deprecated
-    ThresholdingVisitor createThresholder();
+    /**
+     * <p>add</p>
+     *
+     * @param events a {@link java.util.List} object.
+     */
+    public void add(List<Event> events);
 
-    ThresholdingVisitor createThresholder(int nodeId, String hostAddress, String serviceName, RrdRepository repo, ServiceParameters svcParams,
-            ResourceStorageDao resourceStorageDao) throws ThresholdInitializationException;
+    /**
+     * <p>removeAllEvents</p>
+     */
+    public void removeAllEvents();
+    
+    /**
+     * <p>sendAllEvents</p>
+     */
+    public void sendAllEvents();
 
-    ThresholdingEventProxy getEventProxy();
-
-    // TODO - change to take Service as a param
-    LatencyThresholdingSet getLatencyThresholdingSet(int nodeId, String hostAddress, String serviceName, String location, RrdRepository repository,
-            ResourceStorageDao resourceStorageDao) throws ThresholdInitializationException;
 }

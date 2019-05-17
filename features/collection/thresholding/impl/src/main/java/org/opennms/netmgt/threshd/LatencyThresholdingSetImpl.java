@@ -75,16 +75,7 @@ public class LatencyThresholdingSetImpl extends ThresholdingSetImpl implements L
         m_location = location;
     }
 
-    /*
-     * Latency thresholds use ds-type="if"
-     * Returns true if any attribute of the service is involved in any of defined thresholds.
-     */
-    /**
-     * <p>hasThresholds</p>
-     *
-     * @param attributes a {@link java.util.Map} object.
-     * @return a boolean.
-     */
+    @Override
     public boolean hasThresholds(Map<String, Double> attributes) {
         if (hasThresholds()) {
             for (String ds : attributes.keySet())
@@ -94,11 +85,6 @@ public class LatencyThresholdingSetImpl extends ThresholdingSetImpl implements L
         return false;
     }
 
-    /*
-     * Apply thresholds definitions for specified service using attributesMap as current values.
-     * Return a list of events to be send if some thresholds must be triggered or be rearmed.
-     */
-    /** {@inheritDoc} */
     public List<Event> applyThresholds(String svcName, Map<String, Double> attributes, IfLabel ifLabelDao) {
         String ifLabel = "";
         Map<String, String> ifInfo = new HashMap<>();

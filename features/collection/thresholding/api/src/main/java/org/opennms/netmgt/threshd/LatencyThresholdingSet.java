@@ -28,8 +28,13 @@
 
 package org.opennms.netmgt.threshd;
 
+import java.util.List;
+import java.util.Map;
+
+import org.opennms.netmgt.dao.api.IfLabel;
 import org.opennms.netmgt.dao.api.ResourceStorageDao;
 import org.opennms.netmgt.rrd.RrdRepository;
+import org.opennms.netmgt.xml.event.Event;
 
 /**
  * <p>LatencyThresholdingSet class.</p>
@@ -51,5 +56,23 @@ public interface LatencyThresholdingSet extends ThresholdingSet {
      */
     LatencyThresholdingSet create(int nodeId, String hostAddress, String serviceName, String location, RrdRepository repository, ResourceStorageDao resourceStorageDao)
             throws ThresholdInitializationException;
+
+    /*
+     * Latency thresholds use ds-type="if"
+     * Returns true if any attribute of the service is involved in any of defined thresholds.
+     */
+    /**
+     * <p>hasThresholds</p>
+     *
+     * @param attributes a {@link java.util.Map} object.
+     * @return a boolean.
+     */
+    public boolean hasThresholds(Map<String, Double> attributes);
+
+    /*
+     * Apply thresholds definitions for specified service using attributesMap as current values.
+     * Return a list of events to be send if some thresholds must be triggered or be rearmed.
+     */
+    public List<Event> applyThresholds(String svcName, Map<String, Double> attributes, IfLabel ifLabelDao);
 
 }

@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -54,8 +55,11 @@ import org.opennms.netmgt.poller.MonitoredService;
 import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.poller.ServiceMonitorAdaptor;
 import org.opennms.netmgt.rrd.RrdRepository;
+import org.opennms.netmgt.threshd.LatencyThresholdingSet;
 import org.opennms.netmgt.threshd.ThresholdInitializationException;
+import org.opennms.netmgt.threshd.ThresholdingEventProxy;
 import org.opennms.netmgt.threshd.ThresholdingFactory;
+import org.opennms.netmgt.xml.event.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,6 +79,9 @@ public class LatencyStoringServiceMonitorAdaptor implements ServiceMonitorAdapto
     private Package m_pkg;
     private final PersisterFactory m_persisterFactory;
     private final ThresholdingFactory m_thresholdingFactory;
+
+    // The Adapter maintains this handle to the thresholding set in order to be able to track threshold state.
+    private LatencyThresholdingSet m_thresholdingSet;
 
     private final IfLabel m_ifLabelDao;
     private ResourceStorageDao m_resourceStorageDao;
@@ -101,10 +108,17 @@ public class LatencyStoringServiceMonitorAdaptor implements ServiceMonitorAdapto
         String rrdPath     = ParameterMap.getKeyedString(parameters, "rrd-repository", null);
         String dsName      = ParameterMap.getKeyedString(parameters, "ds-name", PollStatus.PROPERTY_RESPONSE_TIME);
         String rrdBaseName = ParameterMap.getKeyedString(parameters, "rrd-base-name", dsName);
+        String thresholds  = ParameterMap.getKeyedString(parameters, "thresholding-enabled", "false");
 
         if (!entries.containsKey(dsName) && entries.containsKey(PollStatus.PROPERTY_RESPONSE_TIME)) {
             entries.put(dsName, entries.get(PollStatus.PROPERTY_RESPONSE_TIME));
             entries.remove(PollStatus.PROPERTY_RESPONSE_TIME);
+        }
+
+        if (thresholds.equalsIgnoreCase("true")) {
+            applyThresholds(rrdPath, svc, dsName, entries);
+        } else {
+            LOG.debug("storeResponseTime: Thresholds processing is not enabled. Check thresholding-enabled parameter on service definition");
         }
 
         if (rrdPath == null) {
@@ -114,6 +128,38 @@ public class LatencyStoringServiceMonitorAdaptor implements ServiceMonitorAdapto
 
         LOG.debug("storeResponseTime: Persisting latency data for {}", svc);
         persistLatencySamples(svc, entries, new File(rrdPath), rrdBaseName);
+    }
+
+    private void applyThresholds(String rrdPath, MonitoredService service, String dsName, Map<String, Number> entries) {
+        try {
+            if (m_thresholdingSet == null) {
+                RrdRepository repository = new RrdRepository();
+                repository.setRrdBaseDir(new File(rrdPath));
+                m_thresholdingSet = m_thresholdingFactory.getLatencyThresholdingSet(service.getNodeId(), service.getIpAddr(), service.getSvcName(), service.getNodeLocation(), repository,
+                                                               m_resourceStorageDao);
+            }
+            LinkedHashMap<String, Double> attributes = new LinkedHashMap<String, Double>();
+            for (String ds : entries.keySet()) {
+                Number sampleValue = entries.get(ds);
+                if (sampleValue == null) {
+                    attributes.put(ds, Double.NaN);
+                } else {
+                    attributes.put(ds, sampleValue.doubleValue());
+                }
+            }
+            if (m_thresholdingSet.isNodeInOutage()) {
+                LOG.info("applyThresholds: the threshold processing will be skipped because the service {} is on a scheduled outage.", service);
+            } else if (m_thresholdingSet.hasThresholds(attributes)) {
+                List<Event> events = m_thresholdingSet.applyThresholds(dsName, attributes, m_ifLabelDao);
+                if (events.size() > 0) {
+                    ThresholdingEventProxy proxy = m_thresholdingFactory.getEventProxy();
+                    proxy.add(events);
+                    proxy.sendAllEvents();
+                }
+            }
+        } catch (Throwable e) {
+            LOG.error("Failed to threshold on {} for {} because of an exception", service, dsName, e);
+        }
     }
 
     private void persistLatencySamples(MonitoredService service, Map<String, Number> entries, File rrdRepositoryRoot, String rrdBaseName) {
@@ -152,13 +198,6 @@ public class LatencyStoringServiceMonitorAdaptor implements ServiceMonitorAdapto
 
         CollectionSetVisitor persister = m_persisterFactory.createPersister(params, repository, false, true, true);
         collectionSet.visit(persister);
-        try {
-            CollectionSetVisitor thresholder = m_thresholdingFactory.createThresholder(
-                service.getNodeId(), service.getIpAddr(), service.getSvcName(), repository, params, m_resourceStorageDao);
-            collectionSet.visit(thresholder);
-        } catch (ThresholdInitializationException e) {
-            LOG.error("Failed to create Thresholding processor", e);
-        }
     }
 
 }

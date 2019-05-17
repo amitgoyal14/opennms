@@ -46,4 +46,15 @@ public class ThresholdingFactoryImpl implements ThresholdingFactory {
         return ThresholdingVisitorImpl.create(nodeId, hostAddress, serviceName, repo, svcParams, resourceStorageDao);
     }
 
+    @Override
+    public LatencyThresholdingSet getLatencyThresholdingSet(int nodeId, String hostAddress, String serviceName, String location, RrdRepository repository,
+            ResourceStorageDao resourceStorageDao) throws ThresholdInitializationException {
+        return new LatencyThresholdingSetImpl(nodeId, hostAddress, serviceName, location, repository, resourceStorageDao);
+    }
+
+    @Override
+    public ThresholdingEventProxy getEventProxy() {
+        return new ThresholdingEventProxyImpl();
+    }
+
 }

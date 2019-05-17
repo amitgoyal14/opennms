@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  * @author ranger
  * @version $Id: $
  */
-public class ThresholdingEventProxy implements EventProxy {
+public class ThresholdingEventProxyImpl implements ThresholdingEventProxy {
     
     private static final Logger LOG = LoggerFactory.getLogger(ThresholdingEventProxy.class);
 
@@ -55,7 +55,7 @@ public class ThresholdingEventProxy implements EventProxy {
     /**
      * <p>Constructor for ThresholdingEventProxy.</p>
      */
-    public ThresholdingEventProxy() {
+    public ThresholdingEventProxyImpl() {
         m_events = new LinkedList<>();
     }
     
