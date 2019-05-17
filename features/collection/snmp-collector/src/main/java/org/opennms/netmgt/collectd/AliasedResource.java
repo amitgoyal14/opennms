@@ -36,9 +36,11 @@ import org.opennms.netmgt.collection.api.CollectionResource;
 import org.opennms.netmgt.collection.api.CollectionSetVisitor;
 import org.opennms.netmgt.collection.api.ServiceParameters;
 import org.opennms.netmgt.collection.api.TimeKeeper;
+import org.opennms.netmgt.dao.api.NodeLabel;
 import org.opennms.netmgt.model.ResourcePath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * <p>AliasedResource class.</p>
@@ -54,6 +56,9 @@ public class AliasedResource extends SnmpCollectionResource {
     private final String m_ifAliasComment;
     private final String m_domain;
     private final String m_ifAlias;
+
+    @Autowired
+    private NodeLabel m_nodeLabelDao;
 
     /**
      * <p>Constructor for AliasedResource.</p>
@@ -95,7 +100,7 @@ public class AliasedResource extends SnmpCollectionResource {
             return Integer.toString(getIfInfo().getNodeId());
         } else if ("nodelabel".equalsIgnoreCase(m_domain)) {
             try {
-                return new NodeLabelJDBCImpl().retrieveLabel(getIfInfo().getNodeId()).getLabel();
+                return m_nodeLabelDao.retrieveLabel(getIfInfo().getNodeId()).getLabel();
             } catch (Throwable e) {
                 return "nodeid-" + Integer.toString(getIfInfo().getNodeId());
             }
