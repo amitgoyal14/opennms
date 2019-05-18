@@ -304,6 +304,14 @@ public class Collectd extends AbstractServiceDaemon implements
         return m_eventIpcManager;
     }
 
+    public ThresholdingFactory getThresholdingFactory() {
+        return m_thresholdingFactory;
+    }
+
+    public void setThresholdingFactory(ThresholdingFactory thresholdingFactory) {
+        m_thresholdingFactory = thresholdingFactory;
+    }
+
     private ReadyRunnable ifScheduler() {
         // Schedule existing interfaces for data collection
 
@@ -1454,10 +1462,6 @@ public class Collectd extends AbstractServiceDaemon implements
 
     public void setServiceCollectorRegistry(ServiceCollectorRegistry serviceCollectorRegistry) {
         m_serviceCollectorRegistry = serviceCollectorRegistry;
-    }
-
-    public void setThresholdingFactory(ThresholdingFactory thresholdingFactory) {
-        m_thresholdingFactory = thresholdingFactory;
     }
 
     public void setLocationAwareCollectorClient(LocationAwareCollectorClient locationAwareCollectorClient) {

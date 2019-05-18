@@ -290,6 +290,22 @@ public class Poller extends AbstractServiceDaemon {
         m_locationAwarePollerClient = locationAwarePollerClient;
     }
 
+    public ThresholdingFactory getThresholdingFactory() {
+        return m_thresholdingFactory;
+    }
+
+    public void setThresholdingFactory(ThresholdingFactory thresholdingFactory) {
+        m_thresholdingFactory = thresholdingFactory;
+    }
+
+    public IfLabel getIfLabelDao() {
+        return m_ifLabelDao;
+    }
+
+    public void setIfLabelDao(IfLabel ifLabelDao) {
+        m_ifLabelDao = ifLabelDao;
+    }
+
     /**
      * <p>onInit</p>
      */
